@@ -1,0 +1,52 @@
+"""python implementation of reqif object model with import and export feature ...
+
+        supported file formats for import:
+        
+            .reqif
+        
+            .xlsx
+        
+        
+        supported file formats for export:
+        
+            .reqif
+        
+            .xlsx
+"""
+
+classifiers = """\
+Development Status :: 4 - Beta
+Environment :: Console
+License :: OSI Approved :: BSD License
+Topic :: Scientific/Engineering
+"""
+
+import sys
+from setuptools import setup, find_packages
+#from canmatrix.version import version
+
+doclines = __doc__.split("\n")
+
+setup(
+    name = "pyreqif",
+    version = 0.1,
+    maintainer = "Eduard Broecker",
+    maintainer_email = "eduard at gmx dot de",
+    url = "http://github.com/ebroecker/pyreqif",
+    classifiers = filter(None, classifiers.split("\n")),
+    description = doclines[0],
+    keywords = "reqif requirements interchange format",
+    long_description = "\n".join(doclines[2:]),
+    license = "BSD",
+    platforms = ["any"],
+    install_requires = ["future"],
+    extras_require = {
+        "reqif": ["lxml"],
+        "xls": ["xlrd", "xlwt"],
+        "xlsx": ["xlsxwriter"],
+    },
+
+    packages = find_packages(),
+#    entry_points={'console_scripts': ['reqifconvert = pyreqif.convert:main']}
+)
+
