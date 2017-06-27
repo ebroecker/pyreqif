@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-
 import sys
+
 
 class reqIfObject(object):
     def __init__(self):
@@ -97,32 +99,77 @@ class datatypeList(reqIfObject):
     def __init__(self):
         self._list = []
         
-    def addDatatype(self, myDatatypeDict):
+    def add(self, myDatatypeDict):
         self._list.append(datatype(**myDatatypeDict))
     
+    def byId(self, datatypeId):
+        for dt in self._list:
+            if datatypeId == dt._identifier:
+                return dt
+        return None
 
+class reqTypeRefs(reqIfObject):
+    def __init__(self, **kwargs):
+        kwargs = reqIfObject.setValues(self, **kwargs)
+        if "typeref" in kwargs:
+            self._typeref = kwargs["typeref"]
+            kwargs.pop("typeref")
+        else:
+            self._typeref = None
+            
+    
 class requirementType(reqIfObject):
     def __init__(self, **kwargs):
-        print kwargs
-        sys.exit(0)
-        pass
+        self._myTypes = {}
+        kwargs = reqIfObject.setValues(self, **kwargs)
+        for myType in kwargs:
+            self._myTypes[myType] = reqTypeRefs(**kwargs[myType])
 
 
 class requirementTypeList(reqIfObject):
     def __init__(self):
         self._list = []
         
-    def addRequirementType(self, myReqTypeDict):
+    def add(self, myReqTypeDict):
         self._list.append(requirementType(**myReqTypeDict))
-        s
 
+class reqirementItem(reqIfObject):
+    def __init__(self, **kwargs):
+        kwargs = reqIfObject.setValues(self, **kwargs)
+        args = [
+            ('contentref', '_contentref', str, None),
+            ('content', '_content', None, None),
+            ('attributeref', '_attributeref', str, None),
+            ('type', '_type', str, None),            
+        ]
+
+
+        for arg_name, destination, function, default in args:
+            try:
+                value = kwargs[arg_name]
+            except KeyError:
+                value = default
+            else:
+                kwargs.pop(arg_name)
+            if function is not None and value is not None:
+                value = function(value)
+            setattr(self, destination, value)
+ 
 class reqirement(reqIfObject):
-    def __init__(self):
-        pass
+    def __init__(self, **kwargs):
+        self._values = []
+        kwargs = reqIfObject.setValues(self, **kwargs)
+        if "typeref" in kwargs:
+            self._typeref = kwargs["typeref"]
+            kwargs.pop("typeref")
+        for ident, value in kwargs["values"].iteritems():
+            self._values.append(reqirementItem(**value))
     
 class reqirementList(reqIfObject):
     def __init__(self):
         self._list = []
+    def add(self, myReqDict):
+        self._list.append(reqirement(**myReqDict))
     
 class specification(reqIfObject):
     def __init__(self):
@@ -137,12 +184,19 @@ class doc(reqIfObject):
         self._header = None
         self._datatypeList = datatypeList()
         self._requirementTypeList = requirementTypeList()
+        self._requirementList = reqirementList()
         
     def addHeader(self, myHeader):
         self._header = header(**myHeader)
         
     def addDatatype(self, myDatatypeDict):
-        self._datatypeList.addDatatype(myDatatypeDict)
+        self._datatypeList.add(myDatatypeDict)
+    
+    def datatypeById(self, datatypeId):
+        return self._datatypeList.byId(datatypeId)
     
     def addRequirementType(self, myReqTypeDict):
-        self._requirementTypeList.addRequirementType(myReqTypeDict)
+        self._requirementTypeList.add(myReqTypeDict)
+        
+    def addRequirement(self, myReqDict):
+        self._requirementList.add(myReqDict)
