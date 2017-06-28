@@ -132,6 +132,11 @@ class requirementTypeList(reqIfObject):
         
     def add(self, myReqTypeDict):
         self._list.append(requirementType(**myReqTypeDict))
+        
+    def byId(self, identifier):
+        for reqType in self._list:
+            if reqType._identifier == identifier:
+                return reqType
 
 class reqirementItem(reqIfObject):
     def __init__(self, **kwargs):
@@ -172,12 +177,23 @@ class reqirementList(reqIfObject):
         self._list.append(reqirement(**myReqDict))
     
 class specification(reqIfObject):
-    def __init__(self):
+    def __init__(self, **mySpecDict):
+        mySpecDict = reqIfObject.setValues(self, **mySpecDict)
+        if "desc" in mySpecDict:
+            self._desc = mySpecDict["desc"]
+            mySpecDict.pop("desc")
+        else:
+            self._desc = None
         self._list = []
+    def addReq(self, reqId):
+        self._list.append(reqId)
 
 class specificationList(reqIfObject):
     def __init__(self):
         self._list = []
+    def add(self, mySpec):
+        self._list.append(mySpec)
+        
     
 class doc(reqIfObject):
     def __init__(self):
@@ -185,6 +201,7 @@ class doc(reqIfObject):
         self._datatypeList = datatypeList()
         self._requirementTypeList = requirementTypeList()
         self._requirementList = reqirementList()
+        self._specificationList = specificationList()
         
     def addHeader(self, myHeader):
         self._header = header(**myHeader)
@@ -200,3 +217,16 @@ class doc(reqIfObject):
         
     def addRequirement(self, myReqDict):
         self._requirementList.add(myReqDict)
+    
+    def addSpecification(self, mySpec):
+        self._specificationList.add(mySpec)
+    
+    def getReqById(self, reqId):
+        for req in self._requirementList._list:
+            if req._identifier == reqId:
+                return req
+            
+    def flatReq(self, reqirement):
+        reqType = self._requirementTypeList.byId(reqirement._typeref) 
+        print(vars (reqType))
+        
