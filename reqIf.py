@@ -5,7 +5,7 @@ from lxml import etree
 import json
 import sys
 import pyreqif.pyreqif
-
+from pprint import pprint
             
 
 def pretty(d, indent=0):
@@ -17,10 +17,26 @@ def pretty(d, indent=0):
             print ('\t' * (indent+1) + str(value))
   
 def reqif2py(myDict):    
+    transLationTable = {"IDENTIFIER": "identifier",
+    "COUNTRY-CODE" : "countryCode",
+    "CREATION-TIME" : "creationTime",
+    "TITLE" : "title",
+    "AUTHOR" : "author",
+    "LONG-NAME" : "longName",
+    "VERSION" : "version",
+    "SOURCE-TOOL-ID" : "sourceToolId",
+    "LAST-CHANGE" : "lastChange",
+    "EMBEDDED":"embedded",
+    "TYPE":"type",
+    "VALUES":"values",
+    "CONTENT-REF":"contentref",
+    "CONTENT":"content",
+    "DESC":"desc"}
+    
     for reqifname in myDict:
-        pyname = reqifname.title().replace('-','')
-        pyname = pyname[0].lower() + pyname[1:]
-        myDict[pyname] =  myDict.pop(reqifname)
+        if reqifname in transLationTable:
+            pyname = transLationTable[reqifname]
+            myDict[pyname] =  myDict.pop(reqifname)
     return myDict
     
             
@@ -142,8 +158,33 @@ def load(f):
         doc.addRequirement(reqif2py(requirement))
 
 
-    for requirement in doc._requirementList._list:
-        for value in requirement._values:
-            print value._content
+#    for requirement in doc._requirementList._list:
+#        for value in requirement._values:
+#            print value._content
 
-#load("aa.xml")
+    specGroupsXml = root.find('./' + ns + 'SPEC-GROUPS')
+    for specGroupXml in specGroupsXml:
+        if specGroupXml.tag == ns + "SPEC-GROUP":
+            specification = getSubElementValuesByTitle(specGroupXml, ['DESC'])
+            spec = pyreqif.pyreqif.specification(**reqif2py(specification))
+            
+            specObjectsXml = specGroupXml.find('./' + ns + 'SPEC-OBJECTS')
+            for specObjectRef in specObjectsXml:
+                spec.addReq(specObjectRef.text)
+            doc.addSpecification(spec)
+
+    return doc
+
+myDoc = load("aa.xml")
+
+specification = myDoc._specificationList._list[0]
+#req = myDoc.getReqById("_640aba33-6f1e-49b3-bbf5-df798a7786bd")
+#req = myDoc.getReqById("_e747a0ca-ea6f-4b8a-b20d-893759701799")
+#pprint(vars(req), indent=2)
+#print myDoc.flatReq(req)
+
+for req in specification._list:
+    reqObj = myDoc.getReqById(req)
+    print myDoc.flatReq(reqObj)
+
+

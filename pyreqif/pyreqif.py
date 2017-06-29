@@ -13,7 +13,6 @@ class reqIfObject(object):
             ('identifier', '_identifier', str, None),
             ('lastChange', '_lastChanged', str, None),
             ('longName', '_longname', str, None),
-            ('longname', '_longname', str, None),
         ]
         for arg_name, destination, function, default in args:
             try:
@@ -29,8 +28,8 @@ class header(reqIfObject):
     def __init__(self, **kwargs):
         args = [
             ('author', '_author', str, None),
-            ('countrycode', '_countrycode', str, None),
-            ('creationtime', '_creationtime', str, None),
+            ('countryCode', '_countrycode', str, None),
+            ('creationTime', '_creationtime', str, None),
             ('sourceToolId', '_sourceToolId', str, None),
             ('title', '_title', str, None),
             ('version', '_version', str, None),
@@ -111,12 +110,11 @@ class datatypeList(reqIfObject):
 class reqTypeRefs(reqIfObject):
     def __init__(self, **kwargs):
         kwargs = reqIfObject.setValues(self, **kwargs)
-        if "typeref" in kwargs:
-            self._typeref = kwargs["typeref"]
-            kwargs.pop("typeref")
+        if "typeRef" in kwargs:
+            self._typeref = kwargs["typeRef"]
+            kwargs.pop("typeRef")
         else:
             self._typeref = None
-            
     
 class requirementType(reqIfObject):
     def __init__(self, **kwargs):
@@ -124,6 +122,12 @@ class requirementType(reqIfObject):
         kwargs = reqIfObject.setValues(self, **kwargs)
         for myType in kwargs:
             self._myTypes[myType] = reqTypeRefs(**kwargs[myType])
+    def attribById(self, attribId):
+        for attrib in self._myTypes:
+            if attrib == attribId:
+                return self._myTypes[attrib]
+
+
 
 
 class requirementTypeList(reqIfObject):
@@ -142,9 +146,9 @@ class reqirementItem(reqIfObject):
     def __init__(self, **kwargs):
         kwargs = reqIfObject.setValues(self, **kwargs)
         args = [
-            ('contentref', '_contentref', str, None),
+            ('contentRef', '_contentref', str, None),
             ('content', '_content', None, None),
-            ('attributeref', '_attributeref', str, None),
+            ('attributeRef', '_attributeref', str, None),
             ('type', '_type', str, None),            
         ]
 
@@ -159,17 +163,24 @@ class reqirementItem(reqIfObject):
             if function is not None and value is not None:
                 value = function(value)
             setattr(self, destination, value)
+            
+        if len(kwargs) > 0:
+            raise TypeError('{}() got unexpected argument{} {}'.format(
+                self.__class__.__name__,
+                's' if len(kwargs) > 1 else '',
+                ', '.join(kwargs.keys())
+            ))
  
 class reqirement(reqIfObject):
     def __init__(self, **kwargs):
         self._values = []
         kwargs = reqIfObject.setValues(self, **kwargs)
-        if "typeref" in kwargs:
-            self._typeref = kwargs["typeref"]
-            kwargs.pop("typeref")
+        if "typeRef" in kwargs:
+            self._typeref = kwargs["typeRef"]
+            kwargs.pop("typeRef")
         for ident, value in kwargs["values"].iteritems():
             self._values.append(reqirementItem(**value))
-    
+        
 class reqirementList(reqIfObject):
     def __init__(self):
         self._list = []
@@ -185,6 +196,12 @@ class specification(reqIfObject):
         else:
             self._desc = None
         self._list = []
+        if len(mySpecDict) > 0:
+            raise TypeError('{}() got unexpected argument{} {}'.format(
+                self.__class__.__name__,
+                's' if len(mySpecDict) > 1 else '',
+                ', '.join(mySpecDict.keys())
+            ))
     def addReq(self, reqId):
         self._list.append(reqId)
 
@@ -226,7 +243,15 @@ class doc(reqIfObject):
             if req._identifier == reqId:
                 return req
             
-    def flatReq(self, reqirement):
-        reqType = self._requirementTypeList.byId(reqirement._typeref) 
-        print(vars (reqType))
-        
+    def flatReq(self, requirement):
+        reqDict = {}
+        reqType = self._requirementTypeList.byId(requirement._typeref)
+        for value in requirement._values:
+            valueType = reqType.attribById(value._attributeref)
+            dataType = self._datatypeList.byId(valueType._typeref)
+
+            if value._contentref is not None:
+                reqDict[valueType._longname] = dataType._valueTable[value._contentref]["longName"]
+            else:
+                reqDict[valueType._longname] = value._content
+        return reqDict
