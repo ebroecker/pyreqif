@@ -9,12 +9,12 @@ class reqIfObject(object):
         self._logName = ""
 
     def setValues(self, **kwargs):
-        args = [
+        self._reqIfObjargs = [
             ('identifier', '_identifier', str, None),
             ('lastChange', '_lastChanged', str, None),
             ('longName', '_longname', str, None),
         ]
-        for arg_name, destination, function, default in args:
+        for arg_name, destination, function, default in self._reqIfObjargs:
             try:
                 value = kwargs[arg_name]
             except KeyError:
@@ -24,9 +24,17 @@ class reqIfObject(object):
             setattr(self, destination, value)
         return kwargs
         
+    def toDict(self):
+        myDict = {}
+        for arg_name, attrib, function, default in self._reqIfObjargs:
+            myDict[arg_name] = getattr(self, attrib)
+        return myDict
+            
+        
+        
 class header(reqIfObject):
     def __init__(self, **kwargs):
-        args = [
+        self._args = [
             ('author', '_author', str, None),
             ('countryCode', '_countrycode', str, None),
             ('creationTime', '_creationtime', str, None),
@@ -36,7 +44,7 @@ class header(reqIfObject):
         ]
 
 
-        for arg_name, destination, function, default in args:
+        for arg_name, destination, function, default in self._args:
             try:
                 value = kwargs[arg_name]
             except KeyError:
@@ -55,7 +63,12 @@ class header(reqIfObject):
                 's' if len(kwargs) > 1 else '',
                 ', '.join(kwargs.keys())
             ))
-
+        
+    def toDict(self):
+        myDict = reqIfObject.toDict(self)
+        for arg_name, attrib, function, default in self._args:
+            myDict[arg_name] = getattr(self, attrib)
+        return myDict
          
 
 class datatype(reqIfObject):
@@ -210,6 +223,20 @@ class specificationList(reqIfObject):
         self._list = []
     def add(self, mySpec):
         self._list.append(mySpec)
+
+class hierarchy(reqIfObject):
+    def __init__(self, **kwargs):
+        kwargs = reqIfObject.setValues(self, **kwargs)
+        if "typeRef" in kwargs:
+            self._typeref = kwargs["typeRef"]
+            kwargs.pop("typeRef")
+        if "objectRef" in kwargs:
+            self._objectref = kwargs["objectRef"]
+            kwargs.pop("objectRef")
+
+        self._children = []
+    def addChild(self, child):        
+        self._children.append(child)
         
     
 class doc(reqIfObject):
@@ -219,6 +246,7 @@ class doc(reqIfObject):
         self._requirementTypeList = requirementTypeList()
         self._requirementList = reqirementList()
         self._specificationList = specificationList()
+        self._hierarchy = []
         
     def addHeader(self, myHeader):
         self._header = header(**myHeader)

@@ -16,8 +16,7 @@ def pretty(d, indent=0):
         else:
             print ('\t' * (indent+1) + str(value))
   
-def reqif2py(myDict):    
-    transLationTable = {"IDENTIFIER": "identifier",
+transLationTable = {"IDENTIFIER": "identifier",
     "COUNTRY-CODE" : "countryCode",
     "CREATION-TIME" : "creationTime",
     "TITLE" : "title",
@@ -32,7 +31,18 @@ def reqif2py(myDict):
     "CONTENT-REF":"contentref",
     "CONTENT":"content",
     "DESC":"desc"}
-    
+
+transLationTableReverse = dict(map(reversed, transLationTable.items()))
+
+def py2reqif(myDict):
+    for pyname in myDict:
+        if pyname in transLationTableReverse:
+            reqifname= transLationTableReverse[pyname]
+            myDict[reqifname] =  myDict.pop(pyname)
+    return myDict
+
+
+def reqif2py(myDict):
     for reqifname in myDict:
         if reqifname in transLationTable:
             pyname = transLationTable[reqifname]
@@ -173,18 +183,79 @@ def load(f):
                 spec.addReq(specObjectRef.text)
             doc.addSpecification(spec)
 
+
+    def getHierarchy(hierarchyEle):
+        hierarchyDict = getSubElementValuesByTitle(hierarchyEle)
+        typeRef = hierarchyEle.find('./' + ns + 'TYPE/' + ns + 'SPEC-TYPE-REF')
+        if typeRef is not None:
+            hierarchyDict["typeRef"] = typeRef
+            
+        objectRef = hierarchyEle.find('./' + ns + 'OBJECT/' + ns + 'SPEC-OBJECT-REF')
+        if objectRef is not None:
+            hierarchyDict["objectRef"] = objectRef
+        hierarchy = pyreqif.pyreqif.hierarchy(**reqif2py(hierarchyDict))
+
+        children = hierarchyEle.find('./' + ns + 'CHILDREN')
+        if children is not None:
+            for child in children:
+                hierarchy.addChild(getHierarchy(child))
+        return hierarchy
+
+        
+    hierarchyRoots = root.find('./' + ns + 'SPEC-HIERARCHY-ROOTS')
+    for hierarchyRoot in hierarchyRoots:
+        doc._hierarchy.append(getHierarchy(hierarchyRoot))
     return doc
 
+
+def createSubElements(parent, myDict):
+    for key in myDict:
+        if myDict[key] is not None:
+            sn = etree.SubElement(parent, key)
+            sn.text = str(myDict[key])
+
+def dump(doc, f):
+    xsi = 'http://www.w3.org/2001/XMLSchema-instance'
+    arVersion = "1"
+    root = etree.Element(
+        'RIF',
+        nsmap={
+            None: 'http://automotive-his.de/200706/rif',
+            'rif-xhtml' : 'http://automotive-his.de/200706/rif-xhtml',
+            'xsi': xsi
+            })
+
+    root.attrib['{{{pre}}}schemaLocation'.format(
+        pre=xsi)] = 'http://automotive-his.de/200706/rif rif.xsd http://automotive-his.de/200706/rif-xhtml rif-xhtml.xsd'
+    
+    
+    createSubElements(root, py2reqif(doc._header.toDict())) 
+
+    f.write(etree.tostring(root, pretty_print=True, xml_declaration=True))
+
+
+
 myDoc = load("aa.xml")
+f = open("bb.xml", "w")
+dump(myDoc, f)
+exit(0)
+#specification = myDoc._specificationList._list[0]
+#for req in specification._list:
+#    reqObj = myDoc.getReqById(req)
+#    print myDoc.flatReq(reqObj)
 
-specification = myDoc._specificationList._list[0]
-#req = myDoc.getReqById("_640aba33-6f1e-49b3-bbf5-df798a7786bd")
-#req = myDoc.getReqById("_e747a0ca-ea6f-4b8a-b20d-893759701799")
-#pprint(vars(req), indent=2)
-#print myDoc.flatReq(req)
+##req = myDoc.getReqById("_640aba33-6f1e-49b3-bbf5-df798a7786bd")
+##req = myDoc.getReqById("_e747a0ca-ea6f-4b8a-b20d-893759701799")
+##pprint(vars(req), indent=2)
+##print myDoc.flatReq(req)
 
-for req in specification._list:
-    reqObj = myDoc.getReqById(req)
-    print myDoc.flatReq(reqObj)
 
+def printHierarch(asd, deepth=0):
+        print deepth,
+        print asd._identifier
+        for child in asd._children:
+            printHierarch(child, deepth+1)
+
+for req in myDoc._hierarchy:    
+    printHierarch(req)    
 
