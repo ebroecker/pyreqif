@@ -66,8 +66,8 @@ def load(f):
             temp = xmlElement.find('./' + ns +tag)
             if temp is not None:
                     returnDict[tag] = temp.text
-            else:
-                    returnDict[tag] = None
+#            else:
+#                    returnDict[tag] = None
         return returnDict
 
     headerTags = getSubElementValuesByTitle(root, ['AUTHOR','COUNTRY-CODE','CREATION-TIME','SOURCE-TOOL-ID','TITLE','VERSION'])
@@ -93,7 +93,7 @@ def load(f):
                         embeddedValue = properties.find('./' + ns + "EMBEDDED-VALUE")
                         tempDict['properites']  = reqif2py(getSubElementValuesByTitle(embeddedValue, ['KEY','OTHER-CONTENT']) )
                         values[tempDict['identifier']] = reqif2py(tempDict) 
-                    datatypeProto['values'] = values    
+                    datatypeProto['values'] = values   
                     doc.addDatatype(reqif2py(datatypeProto))
             else:
                     print ("Not supported datatype: ",)
@@ -103,12 +103,14 @@ def load(f):
     specTypesXmlElement = root.find('./' + ns + 'SPEC-TYPES')
     for child in specTypesXmlElement:
         if child.tag == ns + "SPEC-TYPE":
-            specType = getSubElementValuesByTitle(child)
+            specType = getSubElementValuesByTitle(child, ['DESC'])
+#            specType = getSubElementValuesByTitle(child)
             attributesXml = child.find('./' + ns + "SPEC-ATTRIBUTES")
             if attributesXml is not None:
                 for attribute in attributesXml:
                     if attribute.tag == ns +"ATTRIBUTE-DEFINITION-COMPLEX":
                         specAttribType = getSubElementValuesByTitle(attribute)
+                        specAttribType["type"] = "complex" 
                         typeTag = attribute.find('./' + ns + 'TYPE')
                         if typeTag is not None:
                             reference = typeTag.find('./' + ns + 'DATATYPE-DEFINITION-DOCUMENT-REF')
@@ -118,6 +120,7 @@ def load(f):
                                 print ("BEEP unknown Datatype") 
                     elif attribute.tag == ns + "ATTRIBUTE-DEFINITION-ENUMERATION":
                         specAttribType = getSubElementValuesByTitle(attribute)
+                        specAttribType["type"] = "enum" 
                         typeRef = attribute.find('./' + ns + 'TYPE/' + ns + 'DATATYPE-DEFINITION-ENUMERATION-REF')
                         if typeRef is not None:
                             specAttribType['typeRef'] = typeRef.text
@@ -126,7 +129,7 @@ def load(f):
                         print ("Not supported Attribute: ",)
                         print (attribute.tag)
                     specType[specAttribType['identifier']] = reqif2py(specAttribType)
-                    specType[specAttribType['identifier']].pop('identifier')
+#                    specType[specAttribType['identifier']].pop('identifier')
             doc.addRequirementType(reqif2py(specType))
 
 
@@ -205,14 +208,39 @@ def load(f):
     hierarchyRoots = root.find('./' + ns + 'SPEC-HIERARCHY-ROOTS')
     for hierarchyRoot in hierarchyRoots:
         doc._hierarchy.append(getHierarchy(hierarchyRoot))
+
+    relations = {}
+    specRelsXml = root.find('./' + ns + 'SPEC-RELATIONS')
+    for specRelXml in specRelsXml:
+        if specRelXml.tag == ns + "SPEC-RELATION":
+            relation = getSubElementValuesByTitle(specRelXml)
+            typeRef = specRelXml.find('./' + ns + 'TYPE/' + ns + 'SPEC-TYPE-REF')
+            if typeRef is not None:
+                relation["typeRef"] = typeRef.text
+            sourceRef = specRelXml.find('./' + ns + 'SOURCE/' + ns + 'SPEC-OBJECT-REF')
+            if typeRef is not None:
+                relation["sourceRef"] = sourceRef.text 
+            targetRef = specRelXml.find('./' + ns + 'TARGET/' + ns + 'SPEC-OBJECT-REF')
+            if targetRef is not None:
+                relation["targetRef"] = targetRef.text
+
+            doc.addRelation(reqif2py(relation))
     return doc
 
 
 def createSubElements(parent, myDict):
     for key in myDict:
+        sn = etree.SubElement(parent, key)
         if myDict[key] is not None:
-            sn = etree.SubElement(parent, key)
-            sn.text = str(myDict[key])
+            sn.text = myDict[key]
+        else:
+            sn.text = 'None'
+                
+def createSubElement(parent, tag, text=None):
+    sn = etree.SubElement(parent, tag)
+    if text is not None:
+        sn.text = text
+    return sn
 
 def dump(doc, f):
     xsi = 'http://www.w3.org/2001/XMLSchema-instance'
@@ -228,12 +256,147 @@ def dump(doc, f):
     root.attrib['{{{pre}}}schemaLocation'.format(
         pre=xsi)] = 'http://automotive-his.de/200706/rif rif.xsd http://automotive-his.de/200706/rif-xhtml rif-xhtml.xsd'
     
-    
+  
+    #
+    # HEADER
+    #
+
     createSubElements(root, py2reqif(doc._header.toDict())) 
+
+
+    #
+    # DATATYPES
+    #
+    datatypesXml = createSubElement(root, "DATATYPES")
+    for datatype in doc._datatypeList._list:
+        if datatype._type == "document":
+            datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-DOCUMENT")
+            myDict = py2reqif(datatype.toDict())
+            del myDict["TYPE"]
+            createSubElements(datatypeXml, myDict)
+        if datatype._type == "enum":
+            datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-ENUMERATION")
+            myDict = py2reqif(datatype.toDict())
+            del myDict["TYPE"]
+            createSubElements(datatypeXml, myDict)
+            specifiedValuesXml = createSubElement(datatypeXml, "SPECIFIED-VALUES")
+            for value,label in datatype._valueTable.iteritems():
+                valuesXml = createSubElement(specifiedValuesXml , "ENUM-VALUE")
+                createSubElement(valuesXml, "IDENTIFIER", value)
+                for element,content in py2reqif(label).iteritems():
+                    if element == "properites":
+                        props = createSubElement(valuesXml, "PROPERTIES")
+                        for tag,val in content.iteritems():
+                            createSubElement(props, tag,val)
+                    else:
+                        createSubElement(valuesXml, element, content)
+
+    
+    #
+    # SPEC-TYPES
+    #
+    specTypes = createSubElement(root, "SPEC-TYPES")
+    for reqType in doc._requirementTypeList._list:
+        specType = createSubElement(specTypes, "SPEC-TYPE")
+        specTypeDict = py2reqif(reqType.toDict())
+        for value,label in specTypeDict.iteritems():
+            createSubElement(specType,value,label)
+        
+        if len(reqType._myTypes) > 0:
+            attributesXml = createSubElement(specType,"SPEC-ATTRIBUTES")
+
+            for mytype,ref in reqType._myTypes.iteritems():
+                attribDict = py2reqif(ref.toDict())
+                if "TYPE" in attribDict and attribDict["TYPE"] == "enum":
+                    attribDict.pop("TYPE")
+                    enumXml = createSubElement(attributesXml,"ATTRIBUTE-DEFINITION-ENUMERATION")
+                    for value,label in attribDict.iteritems():
+                        if value == "typeRef":
+                            typeXml = createSubElement(enumXml,"TYPE")
+                            createSubElement(typeXml,"DATATYPE-DEFINITION-ENUMERATION-REF",label)
+                        else:
+                            createSubElement(enumXml,value,label)
+
+
+                if "TYPE" in attribDict and attribDict["TYPE"] == "complex":
+#                    attribDict.pop("TYPE")
+                    enumXml = createSubElement(attributesXml,"ATTRIBUTE-DEFINITION-COMPLEX")
+                    for value,label in attribDict.iteritems():
+                        if value == "typeRef":
+                            typeXml = createSubElement(enumXml,"TYPE")
+                            createSubElement(typeXml,"DATATYPE-DEFINITION-DOCUMENT-REF",label)
+                        else:
+                            createSubElement(enumXml,value,label)
+
+    #
+    # SPEC-TYPES
+    #
+    specsXml = createSubElement(root, "SPEC-OBJECTS")
+    
+    for req in doc._requirementList._list:
+        specXml = createSubElement(specsXml , "SPEC-OBJECT")
+        requirementDict = py2reqif(req.toDict())
+        for value,label in requirementDict.iteritems():
+            if value == "VALUES":
+                valuesXml = createSubElement(specXml, "VALUES")
+                for value in label:
+                    if value._type == "enum":
+                        valueXml = createSubElement(valuesXml, "ATTRIBUTE-VALUE-ENUMERATION")
+                    else:
+                        valueXml = createSubElement(valuesXml, "ATTRIBUTE-VALUE-EMBEDDED-DOCUMENT")
+                    for val,lab in py2reqif(value.toDict()).iteritems():
+                        if val == "contentRef":
+                            createSubElement(valuesXml, "ENUM-VALUE-REF",lab)
+                        elif val == "attributeRef":
+                            if value._type == "enum":
+                                createSubElement(valuesXml, "ATTRIBUTE-DEFINITION-ENUMERATION-REF", lab)
+                            elif value._type == "embeddedDoc":
+                                createSubElement(valuesXml, "ATTRIBUTE-DEFINITION-COMPLEX-REF", lab)
+                            else:
+                                print "Unknown Type " + value._type
+                            
+                        elif val == "TYPE":
+                            pass
+                        elif val == "CONTENT":
+                            if lab is not None:
+                                createSubElement(valueXml, "XHTML-CONTENT", lab)
+                        else:
+                            createSubElement(valueXml, val, lab)
+            elif value == "typeRef":
+                typeXml = createSubElement(specXml, "TYPE")
+                createSubElement(typeXml, "SPEC-TYPE-REF", label)
+            else:
+                createSubElement(specXml , value , label)
+            
+
+    #
+    # SPEC-RELATIONS
+    #
+    specsRelXml = createSubElement(root, "SPEC-RELATIONS")
+    for relation in doc._relations._list:
+        specsRel = createSubElement(specsRelXml  , "SPEC-RELATION")
+        for value,label in py2reqif(relation).iteritems():
+            if value == "typeRef":
+                typeXml = createSubElement(specsRel , "TYPE")
+                createSubElement(typeXml , "SPEC-TYPE-REF", label)
+            elif value == "sourceRef":
+                sourceXml = createSubElement(specsRel , "SOURCE")
+                createSubElement(sourceXml, "SPEC-OBJECT-REF", label)
+            elif value == "targetRef":
+                targetXml = createSubElement(specsRel , "TARGET")
+                createSubElement(targetXml, "SPEC-OBJECT-REF", label)
+            else:
+                createSubElement(specsRel , value, label)
 
     f.write(etree.tostring(root, pretty_print=True, xml_declaration=True))
 
-
+    #
+    # SPEC-HIERARCHY-ROOTS
+    #
+    specsRelXml = createSubElement(root, "SPEC-HIERARCHY-ROOTS")
+    for hierarch in doc._hierarchy:
+        print hierarch._children[0]._objectref
+    
 
 myDoc = load("aa.xml")
 f = open("bb.xml", "w")

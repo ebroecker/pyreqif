@@ -21,6 +21,7 @@ class reqIfObject(object):
                 value = default
             else:
                 kwargs.pop(arg_name)
+#            if value is not None:
             setattr(self, destination, value)
         return kwargs
         
@@ -73,13 +74,13 @@ class header(reqIfObject):
 
 class datatype(reqIfObject):
     def __init__(self, **kwargs):
-        args = [
+        self.datatypeArgs = [
             ('type', '_type', str, None),
             ('embedded', '_embedded', str, None),
         ]
 
 
-        for arg_name, destination, function, default in args:
+        for arg_name, destination, function, default in self.datatypeArgs:
             try:
                 value = kwargs[arg_name]
             except KeyError:
@@ -106,6 +107,11 @@ class datatype(reqIfObject):
                 ', '.join(kwargs.keys())
             ))
         
+    def toDict(self):
+        myDict = reqIfObject.toDict(self)
+        for arg_name, attrib, function, default in self.datatypeArgs:
+            myDict[arg_name] = getattr(self, attrib)
+        return myDict
         
 class datatypeList(reqIfObject):
     def __init__(self):
@@ -125,22 +131,41 @@ class reqTypeRefs(reqIfObject):
         kwargs = reqIfObject.setValues(self, **kwargs)
         if "typeRef" in kwargs:
             self._typeref = kwargs["typeRef"]
-            kwargs.pop("typeRef")
+            kwargs.pop("typeRef")            
         else:
             self._typeref = None
-    
+        if "type" in kwargs:
+            self._type = kwargs["type"]
+            kwargs.pop("type")            
+        else:
+            self._typeref = None
+    def toDict(self):
+        myDict = reqIfObject.toDict(self)
+        if self._typeref is not None:
+            myDict["typeRef"] = self._typeref
+        if self._type is not None:
+            myDict["type"] = self._type
+            
+        return myDict
+        
 class requirementType(reqIfObject):
     def __init__(self, **kwargs):
         self._myTypes = {}
         kwargs = reqIfObject.setValues(self, **kwargs)
+        if "desc" in kwargs:
+            self._desc = kwargs["desc"]
+            kwargs.pop("desc")
         for myType in kwargs:
             self._myTypes[myType] = reqTypeRefs(**kwargs[myType])
     def attribById(self, attribId):
         for attrib in self._myTypes:
             if attrib == attribId:
                 return self._myTypes[attrib]
-
-
+    def toDict(self):
+        myDict = reqIfObject.toDict(self)
+        if self._desc:
+            myDict["desc"] = self._desc
+        return myDict
 
 
 class requirementTypeList(reqIfObject):
@@ -158,7 +183,7 @@ class requirementTypeList(reqIfObject):
 class reqirementItem(reqIfObject):
     def __init__(self, **kwargs):
         kwargs = reqIfObject.setValues(self, **kwargs)
-        args = [
+        self.reqItem_args = [
             ('contentRef', '_contentref', str, None),
             ('content', '_content', None, None),
             ('attributeRef', '_attributeref', str, None),
@@ -166,7 +191,7 @@ class reqirementItem(reqIfObject):
         ]
 
 
-        for arg_name, destination, function, default in args:
+        for arg_name, destination, function, default in self.reqItem_args:
             try:
                 value = kwargs[arg_name]
             except KeyError:
@@ -183,6 +208,15 @@ class reqirementItem(reqIfObject):
                 's' if len(kwargs) > 1 else '',
                 ', '.join(kwargs.keys())
             ))
+        
+    def toDict(self):
+        myDict = reqIfObject.toDict(self)
+        
+        for arg_name, attrib, function, default in self.reqItem_args:
+            myDict[arg_name] = getattr(self, attrib)
+
+        return myDict
+
  
 class reqirement(reqIfObject):
     def __init__(self, **kwargs):
@@ -191,8 +225,18 @@ class reqirement(reqIfObject):
         if "typeRef" in kwargs:
             self._typeref = kwargs["typeRef"]
             kwargs.pop("typeRef")
+        else:
+            self._typeref = None
         for ident, value in kwargs["values"].iteritems():
             self._values.append(reqirementItem(**value))
+
+    def toDict(self):
+        myDict = reqIfObject.toDict(self)
+        if self._typeref is not None:
+            myDict["typeRef"] = self._typeref
+        myDict["values"] = self._values
+        return myDict
+
         
 class reqirementList(reqIfObject):
     def __init__(self):
@@ -237,7 +281,47 @@ class hierarchy(reqIfObject):
         self._children = []
     def addChild(self, child):        
         self._children.append(child)
+    
+
+class relation(reqIfObject):
+    def __init__(self, **kwargs):
+        kwargs = reqIfObject.setValues(self, **kwargs)
+        args = [
+            ('typeRef', '_typeref', str, None),
+            ('desc', '_desc', None, None),
+            ('sourceRef', '_sourceref', str, None),
+            ('targetRef', '_targetref', str, None),            
+        ]
+
+
+        for arg_name, destination, function, default in args:
+            try:
+                value = kwargs[arg_name]
+            except KeyError:
+                value = default
+            else:
+                kwargs.pop(arg_name)
+            if function is not None and value is not None:
+                value = function(value)
+            setattr(self, destination, value)
+            
+        if len(kwargs) > 0:
+            raise TypeError('{}() got unexpected argument{} {}'.format(
+                self.__class__.__name__,
+                's' if len(kwargs) > 1 else '',
+                ', '.join(kwargs.keys())
+            ))
         
+
+class relationList(reqIfObject):
+    def __init__(self):
+        self._list = []
+    def add(self, relation):
+        self._list.append(relation)
+
+    
+    
+    
     
 class doc(reqIfObject):
     def __init__(self):
@@ -247,6 +331,7 @@ class doc(reqIfObject):
         self._requirementList = reqirementList()
         self._specificationList = specificationList()
         self._hierarchy = []
+        self._relations = relationList()
         
     def addHeader(self, myHeader):
         self._header = header(**myHeader)
@@ -283,3 +368,7 @@ class doc(reqIfObject):
             else:
                 reqDict[valueType._longname] = value._content
         return reqDict
+    
+    def addRelation(self, relation):
+        self._relations.add(relation)
+
