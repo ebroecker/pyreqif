@@ -171,10 +171,6 @@ def load(f):
         doc.addRequirement(reqif2py(requirement))
 
 
-#    for requirement in doc._requirementList._list:
-#        for value in requirement._values:
-#            print value._content
-
     specGroupsXml = root.find('./' + ns + 'SPEC-GROUPS')
     for specGroupXml in specGroupsXml:
         if specGroupXml.tag == ns + "SPEC-GROUP":
@@ -207,7 +203,7 @@ def load(f):
         
     hierarchyRoots = root.find('./' + ns + 'SPEC-HIERARCHY-ROOTS')
     for hierarchyRoot in hierarchyRoots:
-        doc._hierarchy.append(getHierarchy(hierarchyRoot))
+        doc.hierarchy.append(getHierarchy(hierarchyRoot))
 
     relations = {}
     specRelsXml = root.find('./' + ns + 'SPEC-RELATIONS')
@@ -261,26 +257,26 @@ def dump(doc, f):
     # HEADER
     #
 
-    createSubElements(root, py2reqif(doc._header.toDict())) 
+    createSubElements(root, py2reqif(doc.header)) 
 
 
     #
     # DATATYPES
     #
     datatypesXml = createSubElement(root, "DATATYPES")
-    for datatype in doc._datatypeList._list:
-        if datatype._type == "document":
+    for datatype in doc.datatypeList:
+        if datatype.mytype == "document":
             datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-DOCUMENT")
             myDict = py2reqif(datatype.toDict())
             del myDict["TYPE"]
             createSubElements(datatypeXml, myDict)
-        if datatype._type == "enum":
+        if datatype.mytype == "enum":
             datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-ENUMERATION")
             myDict = py2reqif(datatype.toDict())
             del myDict["TYPE"]
             createSubElements(datatypeXml, myDict)
             specifiedValuesXml = createSubElement(datatypeXml, "SPECIFIED-VALUES")
-            for value,label in datatype._valueTable.iteritems():
+            for value,label in datatype.valueTable.iteritems():
                 valuesXml = createSubElement(specifiedValuesXml , "ENUM-VALUE")
                 createSubElement(valuesXml, "IDENTIFIER", value)
                 for element,content in py2reqif(label).iteritems():
@@ -296,16 +292,16 @@ def dump(doc, f):
     # SPEC-TYPES
     #
     specTypes = createSubElement(root, "SPEC-TYPES")
-    for reqType in doc._requirementTypeList._list:
+    for reqType in doc.requirementTypeList:
         specType = createSubElement(specTypes, "SPEC-TYPE")
         specTypeDict = py2reqif(reqType.toDict())
         for value,label in specTypeDict.iteritems():
             createSubElement(specType,value,label)
         
-        if len(reqType._myTypes) > 0:
+        if len(reqType.myTypes) > 0:
             attributesXml = createSubElement(specType,"SPEC-ATTRIBUTES")
 
-            for mytype,ref in reqType._myTypes.iteritems():
+            for mytype,ref in reqType.myTypes.iteritems():
                 attribDict = py2reqif(ref.toDict())
                 if "TYPE" in attribDict and attribDict["TYPE"] == "enum":
                     attribDict.pop("TYPE")
@@ -329,18 +325,18 @@ def dump(doc, f):
                             createSubElement(enumXml,value,label)
 
     #
-    # SPEC-TYPES
+    # SPEC-OBJECTS
     #
     specsXml = createSubElement(root, "SPEC-OBJECTS")
     
-    for req in doc._requirementList._list:
+    for req in doc.requirementList:
         specXml = createSubElement(specsXml , "SPEC-OBJECT")
         requirementDict = py2reqif(req.toDict())
         for value,label in requirementDict.iteritems():
             if value == "VALUES":
                 valuesXml = createSubElement(specXml, "VALUES")
                 for value in label:
-                    if value._type == "enum":
+                    if value.mytype == "enum":
                         valueXml = createSubElement(valuesXml, "ATTRIBUTE-VALUE-ENUMERATION")
                     else:
                         valueXml = createSubElement(valuesXml, "ATTRIBUTE-VALUE-EMBEDDED-DOCUMENT")
@@ -348,12 +344,12 @@ def dump(doc, f):
                         if val == "contentRef":
                             createSubElement(valuesXml, "ENUM-VALUE-REF",lab)
                         elif val == "attributeRef":
-                            if value._type == "enum":
+                            if value.mytype == "enum":
                                 createSubElement(valuesXml, "ATTRIBUTE-DEFINITION-ENUMERATION-REF", lab)
-                            elif value._type == "embeddedDoc":
+                            elif value.mytype == "embeddedDoc":
                                 createSubElement(valuesXml, "ATTRIBUTE-DEFINITION-COMPLEX-REF", lab)
                             else:
-                                print "Unknown Type " + value._type
+                                print "Unknown Type " + value.mytype
                             
                         elif val == "TYPE":
                             pass
@@ -373,7 +369,7 @@ def dump(doc, f):
     # SPEC-RELATIONS
     #
     specsRelXml = createSubElement(root, "SPEC-RELATIONS")
-    for relation in doc._relations._list:
+    for relation in doc.relations:
         specsRel = createSubElement(specsRelXml  , "SPEC-RELATION")
         for value,label in py2reqif(relation).iteritems():
             if value == "typeRef":
@@ -394,19 +390,19 @@ def dump(doc, f):
     # SPEC-HIERARCHY-ROOTS
     #
     specsRelXml = createSubElement(root, "SPEC-HIERARCHY-ROOTS")
-    for hierarch in doc._hierarchy:
+    for hierarch in doc.hierarchy:
         print hierarch._children[0]._objectref
     
 
 myDoc = load("aa.xml")
-f = open("bb.xml", "w")
-dump(myDoc, f)
-exit(0)
-#specification = myDoc._specificationList._list[0]
-#for req in specification._list:
-#    reqObj = myDoc.getReqById(req)
-#    print myDoc.flatReq(reqObj)
+#f = open("bb.xml", "w")
+#dump(myDoc, f)
+#exit(0)
 
+for specification in myDoc.specificationList:
+    for req in specification._list:
+        reqObj = myDoc.getReqById(req)
+        print myDoc.flatReq(reqObj)
 ##req = myDoc.getReqById("_640aba33-6f1e-49b3-bbf5-df798a7786bd")
 ##req = myDoc.getReqById("_e747a0ca-ea6f-4b8a-b20d-893759701799")
 ##pprint(vars(req), indent=2)
@@ -419,6 +415,6 @@ def printHierarch(asd, deepth=0):
         for child in asd._children:
             printHierarch(child, deepth+1)
 
-for req in myDoc._hierarchy:    
-    printHierarch(req)    
+#for req in myDoc._hierarchy:    
+#    printHierarch(req)    
 

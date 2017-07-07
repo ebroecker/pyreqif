@@ -107,6 +107,14 @@ class datatype(reqIfObject):
                 ', '.join(kwargs.keys())
             ))
         
+    @property
+    def mytype(self):
+        return self._type
+    
+    @property
+    def valueTable(self):
+        return self._valueTable
+    
     def toDict(self):
         myDict = reqIfObject.toDict(self)
         for arg_name, attrib, function, default in self.datatypeArgs:
@@ -126,6 +134,10 @@ class datatypeList(reqIfObject):
                 return dt
         return None
 
+    def __iter__(self):
+        return iter(self._list)
+
+
 class reqTypeRefs(reqIfObject):
     def __init__(self, **kwargs):
         kwargs = reqIfObject.setValues(self, **kwargs)
@@ -139,6 +151,7 @@ class reqTypeRefs(reqIfObject):
             kwargs.pop("type")            
         else:
             self._typeref = None
+            
     def toDict(self):
         myDict = reqIfObject.toDict(self)
         if self._typeref is not None:
@@ -157,6 +170,10 @@ class requirementType(reqIfObject):
             kwargs.pop("desc")
         for myType in kwargs:
             self._myTypes[myType] = reqTypeRefs(**kwargs[myType])
+    @property
+    def myTypes(self):
+        return self._myTypes
+    
     def attribById(self, attribId):
         for attrib in self._myTypes:
             if attrib == attribId:
@@ -166,7 +183,6 @@ class requirementType(reqIfObject):
         if self._desc:
             myDict["desc"] = self._desc
         return myDict
-
 
 class requirementTypeList(reqIfObject):
     def __init__(self):
@@ -179,6 +195,11 @@ class requirementTypeList(reqIfObject):
         for reqType in self._list:
             if reqType._identifier == identifier:
                 return reqType
+
+    def __iter__(self):
+        return iter(self._list)
+
+
 
 class reqirementItem(reqIfObject):
     def __init__(self, **kwargs):
@@ -208,7 +229,11 @@ class reqirementItem(reqIfObject):
                 's' if len(kwargs) > 1 else '',
                 ', '.join(kwargs.keys())
             ))
-        
+    
+    @property
+    def mytype(self):
+        return self._type
+    
     def toDict(self):
         myDict = reqIfObject.toDict(self)
         
@@ -229,6 +254,10 @@ class reqirement(reqIfObject):
             self._typeref = None
         for ident, value in kwargs["values"].iteritems():
             self._values.append(reqirementItem(**value))
+    
+    @property 
+    def values(self):
+        return self._values
 
     def toDict(self):
         myDict = reqIfObject.toDict(self)
@@ -243,6 +272,8 @@ class reqirementList(reqIfObject):
         self._list = []
     def add(self, myReqDict):
         self._list.append(reqirement(**myReqDict))
+    def __iter__(self):
+        return iter(self._list)
     
 class specification(reqIfObject):
     def __init__(self, **mySpecDict):
@@ -267,6 +298,8 @@ class specificationList(reqIfObject):
         self._list = []
     def add(self, mySpec):
         self._list.append(mySpec)
+    def __iter__(self):
+        return iter(self._list)
 
 class hierarchy(reqIfObject):
     def __init__(self, **kwargs):
@@ -318,6 +351,9 @@ class relationList(reqIfObject):
         self._list = []
     def add(self, relation):
         self._list.append(relation)
+        
+    def __iter__(self):
+        return iter(self._list)
 
     
     
@@ -332,7 +368,35 @@ class doc(reqIfObject):
         self._specificationList = specificationList()
         self._hierarchy = []
         self._relations = relationList()
-        
+    
+    @property 
+    def header(self):
+        return self._header.toDict()
+
+    @property 
+    def datatypeList(self):
+        return self._datatypeList
+
+    @property 
+    def requirementTypeList(self):
+        return self._requirementTypeList 
+    
+    @property
+    def requirementList(self):
+        return self._requirementList
+    
+    @property
+    def relations(self):
+        return self._relations
+    
+    @property
+    def hierarchy(self):
+        return self._hierarchy
+    
+    @property
+    def specificationList(self):
+        return self._specificationList 
+    
     def addHeader(self, myHeader):
         self._header = header(**myHeader)
         
