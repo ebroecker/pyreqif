@@ -1,12 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from builtins import *
 
 from lxml import etree
 import json
 import sys
+sys.path.append('..')
 import pyreqif.pyreqif
 from pprint import pprint
-            
+       
+       
 
 def pretty(d, indent=0):
     for key, value in d.iteritems():
@@ -187,11 +191,11 @@ def load(f):
         hierarchyDict = getSubElementValuesByTitle(hierarchyEle)
         typeRef = hierarchyEle.find('./' + ns + 'TYPE/' + ns + 'SPEC-TYPE-REF')
         if typeRef is not None:
-            hierarchyDict["typeRef"] = typeRef
+            hierarchyDict["typeRef"] = typeRef.text
             
         objectRef = hierarchyEle.find('./' + ns + 'OBJECT/' + ns + 'SPEC-OBJECT-REF')
         if objectRef is not None:
-            hierarchyDict["objectRef"] = objectRef
+            hierarchyDict["objectRef"] = objectRef.text
         hierarchy = pyreqif.pyreqif.hierarchy(**reqif2py(hierarchyDict))
 
         children = hierarchyEle.find('./' + ns + 'CHILDREN')
@@ -384,37 +388,52 @@ def dump(doc, f):
             else:
                 createSubElement(specsRel , value, label)
 
-    f.write(etree.tostring(root, pretty_print=True, xml_declaration=True))
+    #
+    # SPEC-GROUPS
+    #
+    specGroupsXml = createSubElement(root, "SPEC-GROUPS")
+    for specification in doc.specificationList:
+        specGroupXml = createSubElement(specGroupsXml, "SPEC-GROUP")
+        for value,label in py2reqif(specification.toDict()).iteritems():
+            createSubElement(specGroupXml,value,label)
+        specObjectsXml = createSubElement(specGroupXml,"SPEC-OBJECTS")
+        for req in specification:
+            createSubElement(specObjectsXml ,"SPEC-OBJECT-REF", req)
+
 
     #
     # SPEC-HIERARCHY-ROOTS
     #
-    specsRelXml = createSubElement(root, "SPEC-HIERARCHY-ROOTS")
+    def createChildHirachy(parentXmlTag, childObject):
+        childrenXml = createSubElement(parentXmlTag, "CHILDREN")
+
+        for value,label in py2reqif(childObject.toDict()).iteritems():
+            if value == "objectRef":
+                objectXml = createSubElement(childrenXml , "OBJECT")
+                createSubElement(objectXml, "SPEC-OBJECT-REF", label)
+            else:
+                if label is not None:
+                    createSubElement(childrenXml , value, label)
+
+        for child in childObject.children:
+            createChildHirachy(childrenXml, child)
+    
+    
+    specHierarchRootsXml = createSubElement(root, "SPEC-HIERARCHY-ROOTS")
+    #SPEC-HIERARCHY-ROOT
     for hierarch in doc.hierarchy:
-        print hierarch._children[0]._objectref
+        specHierarchRootXml = createSubElement(specHierarchRootsXml, "SPEC-HIERARCHY-ROOT")
+        for value,label in py2reqif(hierarch.toDict()).iteritems():
+            if value == "typeRef":
+                typeXml = createSubElement(specHierarchRootXml, "TYPE")
+                createSubElement(typeXml, "SPEC-TYPE-REF", label)
+            else:
+                createSubElement(specHierarchRootXml, value, label)
+
+        
+        for child in hierarch.children:
+            createChildHirachy(specHierarchRootXml, child)
     
 
-myDoc = load("aa.xml")
-#f = open("bb.xml", "w")
-#dump(myDoc, f)
-#exit(0)
-
-for specification in myDoc.specificationList:
-    for req in specification._list:
-        reqObj = myDoc.getReqById(req)
-        print myDoc.flatReq(reqObj)
-##req = myDoc.getReqById("_640aba33-6f1e-49b3-bbf5-df798a7786bd")
-##req = myDoc.getReqById("_e747a0ca-ea6f-4b8a-b20d-893759701799")
-##pprint(vars(req), indent=2)
-##print myDoc.flatReq(req)
-
-
-def printHierarch(asd, deepth=0):
-        print deepth,
-        print asd._identifier
-        for child in asd._children:
-            printHierarch(child, deepth+1)
-
-#for req in myDoc._hierarchy:    
-#    printHierarch(req)    
+    f.write(etree.tostring(root, pretty_print=True, xml_declaration=True))
 

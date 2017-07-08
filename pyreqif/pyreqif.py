@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 import sys
 
@@ -290,6 +291,14 @@ class specification(reqIfObject):
                 's' if len(mySpecDict) > 1 else '',
                 ', '.join(mySpecDict.keys())
             ))
+    def __iter__(self):
+        return iter(self._list)
+    def toDict(self):
+        myDict = reqIfObject.toDict(self)
+        if self._desc is not None:
+            myDict["desc"] = self._desc
+        return myDict
+        
     def addReq(self, reqId):
         self._list.append(reqId)
 
@@ -307,11 +316,28 @@ class hierarchy(reqIfObject):
         if "typeRef" in kwargs:
             self._typeref = kwargs["typeRef"]
             kwargs.pop("typeRef")
+        else:
+            self._typeref = None
         if "objectRef" in kwargs:
             self._objectref = kwargs["objectRef"]
             kwargs.pop("objectRef")
+        else:
+            self._objectref = None
 
         self._children = []
+        
+    @property
+    def children(self):
+        return self._children
+    
+    def toDict(self):
+        myDict = reqIfObject.toDict(self)
+        if self._typeref is not None:
+            myDict["typeRef"] = self._typeref
+        if self._objectref is not None:
+            myDict["objectRef"] = self._objectref
+        return myDict
+
     def addChild(self, child):        
         self._children.append(child)
     
@@ -428,7 +454,8 @@ class doc(reqIfObject):
             dataType = self._datatypeList.byId(valueType._typeref)
 
             if value._contentref is not None:
-                reqDict[valueType._longname] = dataType._valueTable[value._contentref]["longName"]
+                if "longName" in dataType._valueTable[value._contentref]:
+                    reqDict[valueType._longname] = dataType._valueTable[value._contentref]["longName"]
             else:
                 reqDict[valueType._longname] = value._content
         return reqDict
