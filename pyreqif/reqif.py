@@ -1,9 +1,12 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
+import io
 from builtins import *
 
 from lxml import etree
+from lxml import objectify
 import json
 import sys
 sys.path.append('..')
@@ -136,6 +139,35 @@ def load(f):
 #                    specType[specAttribType['identifier']].pop('identifier')
             doc.addRequirementType(reqif2py(specType))
 
+    def remove_namespaces(thedoc):
+        # http://wiki.tei-c.org/index.php/Remove-Namespaces.xsl
+        xslt = '''<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+        <xsl:output method="xml" indent="no"/>
+    
+        <xsl:template match="/|comment()|processing-instruction()">
+            <xsl:copy>
+              <xsl:apply-templates/>
+            </xsl:copy>
+        </xsl:template>
+    
+        <xsl:template match="*">
+            <xsl:element name="{local-name()}">
+              <xsl:apply-templates select="@*|node()"/>
+            </xsl:element>
+        </xsl:template>
+    
+        <xsl:template match="@*">
+            <xsl:attribute name="{local-name()}">
+              <xsl:value-of select="."/>
+            </xsl:attribute>
+        </xsl:template>
+        </xsl:stylesheet>
+        '''
+
+        xslt_doc = etree.parse(io.BytesIO(xslt))
+        transform = etree.XSLT(xslt_doc)
+        ret = transform(thedoc)
+        return ret
 
     specObjectsXmlElement = root.find('./' + ns + 'SPEC-OBJECTS')
     for requirementXml in specObjectsXmlElement:
@@ -154,7 +186,9 @@ def load(f):
                     attributeRefXml = valueXml.find('./' + ns + 'DEFINITION/' + ns + 'ATTRIBUTE-DEFINITION-COMPLEX-REF')
                     value['attributeRef'] = attributeRefXml.text
                     contentXml = valueXml.find('./' + ns + 'XHTML-CONTENT/{http://automotive-his.de/200706/rif-xhtml}div')
-                    value["content"] = contentXml.text
+
+#                    value["content"] = "".join(contentXml.itertext())
+                    value["content"] = etree.tostring(remove_namespaces(contentXml))
                     value["type"] = "embeddedDoc"
                     
                 elif valueXml.tag == ns + 'ATTRIBUTE-VALUE-ENUMERATION':

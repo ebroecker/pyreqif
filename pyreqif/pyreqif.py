@@ -1,6 +1,8 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 import sys
+import io
+from lxml import etree
 
 
 class reqIfObject(object):
@@ -260,6 +262,23 @@ class reqirement(reqIfObject):
     def values(self):
         return self._values
 
+    @property
+    def values_text(self):
+        textValues = []
+        for value in self._values:
+            newVal = value
+#            print value._content
+            if value._contentref is None and value._content is not None and len(value._content) > 0 and value._content[0] == "<":
+                try:
+                    tree = etree.parse(io.BytesIO(value._content))
+                    root = tree.getroot()
+                    test = "".join(root.itertext())
+                    newVal._content = test
+                except:
+                    pass
+            textValues.append(newVal)
+        return textValues
+
     def toDict(self):
         myDict = reqIfObject.toDict(self)
         if self._typeref is not None:
@@ -293,6 +312,13 @@ class specification(reqIfObject):
             ))
     def __iter__(self):
         return iter(self._list)
+    @property
+    def name(self):
+        return self._longname
+    @property
+    def desc(self):
+        return self._desc
+    
     def toDict(self):
         myDict = reqIfObject.toDict(self)
         if self._desc is not None:
@@ -446,10 +472,14 @@ class doc(reqIfObject):
             if req._identifier == reqId:
                 return req
             
-    def flatReq(self, requirement):
+    def flatReq(self, requirement, **kwargs):
         reqDict = {}
         reqType = self._requirementTypeList.byId(requirement._typeref)
-        for value in requirement._values:
+        if "html" in kwargs and kwargs["html"]:
+            valueArray = requirement.values
+        else:
+            valueArray = requirement.values_text
+        for value in valueArray:
             valueType = reqType.attribById(value._attributeref)
             dataType = self._datatypeList.byId(valueType._typeref)
 
