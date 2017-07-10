@@ -1,20 +1,17 @@
 #!/usr/bin/env python2
 
-import pyreqif.pyreqif
 import pyreqif.reqif
-import xlsxwriter
 import io
+import os.path
 from lxml import etree
+import pyreqif.extractOleData
+
+filename = "aa.xml"
+basepath = os.path.dirname(filename)
 
 
-myDoc = pyreqif.reqif.load("aa.xml")
-#f = open("bb.xml", "w")
-#pyreqif.reqif.dump(myDoc, f)
-
-workbook = xlsxwriter.Workbook("test.xlsx")
-
+myDoc = pyreqif.reqif.load(filename)
 for specification in myDoc.specificationList:
-    worksheet = workbook.add_worksheet(specification.name)
     row = 0
     cols = []
     for req in specification:
@@ -23,16 +20,11 @@ for specification in myDoc.specificationList:
             if col  not in cols:
                 cols.append(col)
 
-    colNr = 0
-    for col in cols:
-        worksheet.write(0, colNr, col)
-        colNr += 1
-        
+    colNr = 0        
     for req in specification:
         row += 1
         reqObj = myDoc.getReqById(req)
         for col,value in myDoc.flatReq(reqObj, html=True).iteritems():
-            worksheet.write(row,cols.index(col),value)
             if value is not None:
                 if "<" in value:
                     try:
@@ -40,28 +32,27 @@ for specification in myDoc.specificationList:
                         root = tree.getroot()
                         for element in root.iter("object"):
                             print value
-                            print element.attrib["name"]
-                            print element.attrib["data"]
-                            print element.attrib["type"]
-                            root.remove(element)
+
+                            rtfFilename = os.path.join(basepath, element.attrib["data"])
+                            files = extractOleData(rtfFilename)
+#                            for file in files:
+#                                print os.path.splitext(file)[1]
+
+                            name = element.attrib["name"]
+
+                            for key in element.attrib:
+                                del element.attrib[key]
+#                            root.remove(element)
+                            element.tag = "a"
+                            element.set("href", "mks:///item/field?fieldid=Attachments&attachmentname=" + name)
+
                             value = etree.tostring(root)
+
                             print value
                             print "\n\n"
 
                     except:
                         pass
-#                print value
-#                print "\n\n"
-                pass
-#
-#                 print value
-workbook.close()
-
-##req = myDoc.getReqById("_640aba33-6f1e-49b3-bbf5-df798a7786bd")
-##req = myDoc.getReqById("_e747a0ca-ea6f-4b8a-b20d-893759701799")
-##pprint(vars(req), indent=2)
-##print myDoc.flatReq(req)
-
 
 #def printHierarch(asd, deepth=0):
 #        print deepth,

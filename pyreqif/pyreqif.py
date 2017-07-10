@@ -149,6 +149,14 @@ class reqTypeRefs(reqIfObject):
             kwargs.pop("typeRef")            
         else:
             self._typeref = None
+
+        if "defaultValue" in kwargs:
+            self._defaultValue = kwargs["defaultValue"]
+            kwargs.pop("defaultValue")
+        else:
+            self._defaultValue = None
+
+
         if "type" in kwargs:
             self._type = kwargs["type"]
             kwargs.pop("type")            
@@ -173,6 +181,8 @@ class requirementType(reqIfObject):
             kwargs.pop("desc")
         for myType in kwargs:
             self._myTypes[myType] = reqTypeRefs(**kwargs[myType])
+
+
     @property
     def myTypes(self):
         return self._myTypes
@@ -474,14 +484,20 @@ class doc(reqIfObject):
             
     def flatReq(self, requirement, **kwargs):
         reqDict = {}
-        reqType = self._requirementTypeList.byId(requirement._typeref)
+        reqType = self.requirementTypeList.byId(requirement._typeref)
+
+        for myTypeId,myType in reqType.myTypes.iteritems():
+            if myType._defaultValue is not None:
+                dataType = self.datatypeById(myType._typeref)
+                reqDict[myType._longname] = dataType._valueTable[myType._defaultValue]["longName"]
+
         if "html" in kwargs and kwargs["html"]:
             valueArray = requirement.values
         else:
             valueArray = requirement.values_text
         for value in valueArray:
             valueType = reqType.attribById(value._attributeref)
-            dataType = self._datatypeList.byId(valueType._typeref)
+            dataType = self.datatypeById(valueType._typeref)
 
             if value._contentref is not None:
                 if "longName" in dataType._valueTable[value._contentref]:

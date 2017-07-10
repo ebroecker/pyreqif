@@ -131,7 +131,10 @@ def load(f):
                         typeRef = attribute.find('./' + ns + 'TYPE/' + ns + 'DATATYPE-DEFINITION-ENUMERATION-REF')
                         if typeRef is not None:
                             specAttribType['typeRef'] = typeRef.text
-                        
+                        defaultValue = attribute.find('./' + ns + 'DEFAULT-VALUE/' + ns + 'ATTRIBUTE-VALUE-ENUMERATION/' + ns + 'VALUES/'+ ns + 'ENUM-VALUE-REF')
+                        if defaultValue is not None:
+                            specAttribType['defaultValue'] = defaultValue.text
+
                     else:
                         print ("Not supported Attribute: ",)
                         print (attribute.tag)
@@ -245,20 +248,21 @@ def load(f):
 
     relations = {}
     specRelsXml = root.find('./' + ns + 'SPEC-RELATIONS')
-    for specRelXml in specRelsXml:
-        if specRelXml.tag == ns + "SPEC-RELATION":
-            relation = getSubElementValuesByTitle(specRelXml)
-            typeRef = specRelXml.find('./' + ns + 'TYPE/' + ns + 'SPEC-TYPE-REF')
-            if typeRef is not None:
-                relation["typeRef"] = typeRef.text
-            sourceRef = specRelXml.find('./' + ns + 'SOURCE/' + ns + 'SPEC-OBJECT-REF')
-            if typeRef is not None:
-                relation["sourceRef"] = sourceRef.text 
-            targetRef = specRelXml.find('./' + ns + 'TARGET/' + ns + 'SPEC-OBJECT-REF')
-            if targetRef is not None:
-                relation["targetRef"] = targetRef.text
+    if specRelsXml is not None:
+        for specRelXml in specRelsXml:
+            if specRelXml.tag == ns + "SPEC-RELATION":
+                relation = getSubElementValuesByTitle(specRelXml)
+                typeRef = specRelXml.find('./' + ns + 'TYPE/' + ns + 'SPEC-TYPE-REF')
+                if typeRef is not None:
+                    relation["typeRef"] = typeRef.text
+                sourceRef = specRelXml.find('./' + ns + 'SOURCE/' + ns + 'SPEC-OBJECT-REF')
+                if typeRef is not None:
+                    relation["sourceRef"] = sourceRef.text
+                targetRef = specRelXml.find('./' + ns + 'TARGET/' + ns + 'SPEC-OBJECT-REF')
+                if targetRef is not None:
+                    relation["targetRef"] = targetRef.text
 
-            doc.addRelation(reqif2py(relation))
+                doc.addRelation(reqif2py(relation))
     return doc
 
 
