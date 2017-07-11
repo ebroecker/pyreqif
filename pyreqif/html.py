@@ -4,7 +4,9 @@ import io
 import os.path
 import extractOleData
 from lxml import etree
-
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 
 def dump(myDoc, outfile, basepath = None):
@@ -12,7 +14,7 @@ def dump(myDoc, outfile, basepath = None):
         basepath = os.path.dirname(outfile)
 
     for specification in myDoc.specificationList:
-        htmlOutput = "<table><tr>"
+        htmlOutput = u"<table><tr>"
         row = 0
         cols = []
         for req in specification:
@@ -23,10 +25,10 @@ def dump(myDoc, outfile, basepath = None):
 
         colNr = 0
         for col in cols:
-            htmlOutput += "<td>" + col
+            htmlOutput += u"<td>" + col
             colNr += 1
 
-        htmlOutput += "</tr><tr>"
+        htmlOutput += u"</tr><tr>"
 
         for req in specification:
             row += 1
@@ -40,14 +42,15 @@ def dump(myDoc, outfile, basepath = None):
                             for element in root.iter("object"):
                                 rtfFilename = os.path.join(basepath, element.attrib["data"])
                                 files = extractOleData.extractOleData(rtfFilename)
-                                name = element.attrib["name"]
+                                if len(files) > 0:
+                                    name = element.attrib["name"]
 
-                                for key in element.attrib:
-                                    del element.attrib[key]
-                                element.tag = "a"
-                                element.set("href", files[0])
-                                element.text = name
-                                value = etree.tostring(root)
+                                    for key in element.attrib:
+                                        del element.attrib[key]
+                                    element.tag = "a"
+                                    element.set("href", files[0])
+                                    element.text = name
+                            value = etree.tostring(root)
                         except:
                             pass
                     htmlOutput += "<td>" + value
