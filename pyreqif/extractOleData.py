@@ -20,8 +20,8 @@ def extractOleData(rtfFilename):
 #                outfileData = obj.oledata[obj.oledata.find("PK\03\04"):]
 #                outfileName = os.path.splitext(rtfFilename)[0] + ".docx"
 #            else:
-                outfileName = os.path.splitext(rtfFilename)[0] + ".doc"
-                outfileData = obj.oledata
+            outfileName = os.path.splitext(rtfFilename)[0] + ".doc"
+            outfileData = obj.oledata
         elif 'Excel' in obj.class_name:
             if "PK\03\04" in obj.oledata:
                 outfileData = obj.oledata[obj.oledata.find("PK\03\04"):]

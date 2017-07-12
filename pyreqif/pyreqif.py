@@ -186,11 +186,19 @@ class requirementType(reqIfObject):
     @property
     def myTypes(self):
         return self._myTypes
-    
+
+    @property
+    def fields(self):
+        fields = []
+        for type,typeObj in self._myTypes.iteritems():
+            fields.append(typeObj._longname)
+        return fields
+
     def attribById(self, attribId):
         for attrib in self._myTypes:
             if attrib == attribId:
                 return self._myTypes[attrib]
+
     def toDict(self):
         myDict = reqIfObject.toDict(self)
         if self._desc:
@@ -208,6 +216,13 @@ class requirementTypeList(reqIfObject):
         for reqType in self._list:
             if reqType._identifier == identifier:
                 return reqType
+
+    @property
+    def fields(self):
+        fields = []
+        for reqType in self._list:
+            fields += reqType.fields
+        return fields
 
     def __iter__(self):
         return iter(self._list)
@@ -457,8 +472,12 @@ class doc(reqIfObject):
     
     @property
     def specificationList(self):
-        return self._specificationList 
-    
+        return self._specificationList
+
+    @property
+    def fields(self):
+        return self._requirementTypeList.fields
+
     def addHeader(self, myHeader):
         self._header = header(**myHeader)
         
