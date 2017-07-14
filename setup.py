@@ -47,6 +47,8 @@ setup(
     },
 
     packages = find_packages(),
+    scripts=['reqif2html.py', 'reqif2xlsx.py']
+
 #    entry_points={'console_scripts': ['reqifconvert = pyreqif.convert:main']}
 )
 
