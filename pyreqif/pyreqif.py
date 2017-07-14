@@ -432,8 +432,7 @@ class relationList(reqIfObject):
     def __iter__(self):
         return iter(self._list)
 
-    
-    
+
     
     
 class doc(reqIfObject):
@@ -528,3 +527,39 @@ class doc(reqIfObject):
     def addRelation(self, relation):
         self._relations.add(relation)
 
+    def asDict(self):
+        cols = self.fields
+        specs = []
+
+        for specification in self.specificationList:
+            spec = []
+            for req in specification:
+                tempReq = self.req2dict(req, cols)
+                spec.append(tempReq)
+            specs.append(spec)
+        return specs
+
+    def req2dict(self, req, cols):
+        reqObj = self.getReqById(req)
+        tempReq = {}
+        for col in cols:
+            tempReq[col] = ""
+        for col, value in self.flatReq(reqObj, html=True).iteritems():
+            tempReq[col] = value
+            tempReq["reqifId"] = req
+        return tempReq
+
+    def asHierarchDict(self):
+        cols = self.fields
+        spec = []
+
+        for child in self.hierarchy:
+            spec.append(self._hierarchDict(child, cols))
+        return spec
+
+    def _hierarchDict(self, element, cols):
+        retDict = {}
+        for child in element.children:
+            retDict[child._objectref] = self.req2dict(child._objectref, cols)
+            retDict[child._objectref]["children"] = self._hierarchDict(child, cols)
+        return retDict
