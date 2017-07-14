@@ -3,7 +3,7 @@
 
 import io
 import os.path
-import extractOleData
+import ole2rtf
 from lxml import etree
 import sys
 reload(sys)
@@ -17,12 +17,7 @@ def dump(myDoc, outfile, basepath = None):
     for specification in myDoc.specificationList:
         htmlOutput = u"<table><tr>"
         row = 0
-        cols = []
-        for req in specification:
-            reqObj = myDoc.getReqById(req)
-            for col in myDoc.flatReq(reqObj, html=True):
-                if col  not in cols:
-                    cols.append(col)
+        cols = myDoc.fields
 
         colNr = 0
         for col in cols:
@@ -37,23 +32,24 @@ def dump(myDoc, outfile, basepath = None):
             for col,value in myDoc.flatReq(reqObj, html=True).iteritems():
                 if value is not None:
                     if "<" in value:
-                        try:
-                            tree = etree.parse(io.BytesIO(value))
-                            root = tree.getroot()
-                            for element in root.iter("object"):
-                                rtfFilename = os.path.join(basepath, element.attrib["data"])
-                                files = extractOleData.extractOleData(rtfFilename)
-                                if len(files) > 0:
-                                    name = element.attrib["name"]
+                        tree = etree.parse(io.BytesIO(value))
+                        root = tree.getroot()
+                        for element in root.iter("object"):
+                            rtfFilename = os.path.join(basepath, element.attrib["data"])
+                            files = ole2rtf.ole2rtf(rtfFilename)
+                            if len(files) > 0:
+                                name = element.attrib["name"]
 
-                                    for key in element.attrib:
-                                        del element.attrib[key]
-                                    element.tag = "a"
-                                    element.set("href", files[0])
-                                    element.text = name
-                            value = etree.tostring(root)
-                        except:
-                            pass
+                                for key in element.attrib:
+                                    del element.attrib[key]
+                                element.tag = "a"
+                                element.set("href", files[0])
+                                element.text = name
+                                imgElement = etree.Element("img")
+                                imgElement.set("src", os.path.splitext(files[0])[0] + ".png")
+                                element.append(imgElement)
+
+                        value = etree.tostring(root)
                     htmlOutput += "<td>" + value
             htmlOutput += "</tr><tr>"
         htmlOutput += "</table>"
