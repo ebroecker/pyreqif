@@ -397,7 +397,15 @@ def dump(doc, f):
                             pass
                         elif val == "CONTENT":
                             if lab is not None:
-                                createSubElement(valueXml, "XHTML-CONTENT", lab)
+                                if "<" in lab:
+                                    labtree = etree.parse(io.BytesIO(lab))
+                                    labroot = labtree.getroot()
+                                    for el in labroot.iter():
+                                        el.tag = '{http://automotive-his.de/200706/rif-xhtml}' + el.tag
+                                    contentXml = createSubElement(valueXml, "XHTML-CONTENT")
+                                    contentXml.append(labroot)
+                                else:
+                                    createSubElement(valueXml, "XHTML-CONTENT", lab)
                         else:
                             createSubElement(valueXml, val, lab)
             elif value == "typeRef":
