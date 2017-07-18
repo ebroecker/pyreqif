@@ -15,8 +15,7 @@ def dump(myDoc, outfile, basepath = None):
         basepath = os.path.dirname(outfile)
 
     for specification in myDoc.specificationList:
-        htmlOutput = u"<table><tr>"
-        row = 0
+        htmlOutput = u"<table border=1><tr>"
         cols = myDoc.fields
 
         colNr = 0
@@ -27,8 +26,8 @@ def dump(myDoc, outfile, basepath = None):
         htmlOutput += u"</tr><tr>"
 
         for req in specification:
-            row += 1
             reqObj = myDoc.getReqById(req)
+            tempReq ={}
             for col,value in myDoc.flatReq(reqObj, html=True).iteritems():
                 if value is not None:
                     if "<" in value:
@@ -50,7 +49,11 @@ def dump(myDoc, outfile, basepath = None):
                                 element.append(imgElement)
 
                         value = etree.tostring(root)
-                    htmlOutput += "<td>" + value
+                tempReq[col] = value
+            for col in cols:
+                htmlOutput += "<td>"
+                if col in tempReq:
+                    htmlOutput += tempReq[col]
             htmlOutput += "</tr><tr>"
         htmlOutput += "</table>"
     fp = open(outfile, "wb")
