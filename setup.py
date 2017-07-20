@@ -1,10 +1,8 @@
-"""python implementation of reqif object model with import and export feature ...
+"""very basic python implementation of reqif object model with import and export feature ...
 
         supported file formats for import:
         
             .reqif
-        
-            .xlsx
         
         
         supported file formats for export:
@@ -12,6 +10,8 @@
             .reqif
         
             .xlsx
+            
+            .html
 """
 
 classifiers = """\
@@ -23,7 +23,6 @@ Topic :: Scientific/Engineering
 
 import sys
 from setuptools import setup, find_packages
-#from canmatrix.version import version
 
 doclines = __doc__.split("\n")
 
@@ -42,13 +41,10 @@ setup(
     install_requires = ["future"],
     extras_require = {
         "reqif": ["lxml"],
-        "xls": ["xlrd", "xlwt"],
         "xlsx": ["xlsxwriter"],
     },
 
     packages = find_packages(),
     scripts=['reqif2html.py', 'reqif2xlsx.py']
-
-#    entry_points={'console_scripts': ['reqifconvert = pyreqif.convert:main']}
 )
 
