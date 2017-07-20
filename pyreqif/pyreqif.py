@@ -1,9 +1,8 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-import sys
 import io
 from lxml import etree
-
+import collections
 
 class reqIfObject(object):
     def __init__(self):
@@ -541,7 +540,7 @@ class doc(reqIfObject):
 
     def req2dict(self, req, cols):
         reqObj = self.getReqById(req)
-        tempReq = {}
+        tempReq = collections.OrderedDict()
         for col in cols:
             tempReq[col] = ""
         for col, value in self.flatReq(reqObj, html=True).iteritems():
@@ -558,7 +557,7 @@ class doc(reqIfObject):
         return spec
 
     def _hierarchDict(self, element, cols):
-        retDict = {}
+        retDict = collections.OrderedDict()
         for child in element.children:
             retDict[child._objectref] = self.req2dict(child._objectref, cols)
             retDict[child._objectref]["children"] = self._hierarchDict(child, cols)
