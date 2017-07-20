@@ -557,7 +557,7 @@ class doc(reqIfObject):
         return spec
 
     def _hierarchDict(self, element, cols):
-        retDict = {}
+        retDict = collections.OrderedDict()
         for child in element.children:
             retDict[child._objectref] = self.req2dict(child._objectref, cols)
             retDict[child._objectref]["children"] = self._hierarchDict(child, cols)
