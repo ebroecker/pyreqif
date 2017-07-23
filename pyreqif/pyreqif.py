@@ -44,6 +44,7 @@ class header(reqIfObject):
             ('sourceToolId', '_sourceToolId', str, None),
             ('title', '_title', str, None),
             ('version', '_version', str, None),
+            ('comment', '_comment', str, None),
         ]
 
 

@@ -27,6 +27,7 @@ transLationTable = {"IDENTIFIER": "identifier",
     "COUNTRY-CODE" : "countryCode",
     "CREATION-TIME" : "creationTime",
     "TITLE" : "title",
+    "COMMENT" : "comment",
     "AUTHOR" : "author",
     "LONG-NAME" : "longName",
     "VERSION" : "version",
@@ -58,6 +59,7 @@ def reqif2py(myDict):
     
             
 def load(f):
+    inputType = "RIF"
     doc = pyreqif.pyreqif.doc()
     tree =  etree.parse(f)
     root = tree.getroot()
@@ -67,24 +69,37 @@ def load(f):
 
     def getSubElementValuesByTitle(xmlElement, tagNameArray = []):
         defaultsSubElements = ['IDENTIFIER','LAST-CHANGE','LONG-NAME']
+        # ALTERNATIVE-ID ?
         tagNameArray = list(set(defaultsSubElements + tagNameArray))
         returnDict = {}
         for tag in tagNameArray:
-            temp = xmlElement.find('./' + ns +tag)
-            if temp is not None:
-                    returnDict[tag] = temp.text
-#            else:
-#                    returnDict[tag] = None
+            if tag in xmlElement.attrib:
+                returnDict[tag] = xmlElement.attrib[tag]
+            else:
+                temp = xmlElement.find('./' + ns +tag)
+                if temp is not None:
+                        returnDict[tag] = temp.text
         return returnDict
 
-    headerTags = getSubElementValuesByTitle(root, ['AUTHOR','COUNTRY-CODE','CREATION-TIME','SOURCE-TOOL-ID','TITLE','VERSION'])
+    if root.tag ==  ns + "REQ-IF":
+        inputType = "REQIF"
+        headerRoot = root.find('./' + ns + 'THE-HEADER/' + ns + 'REQ-IF-HEADER')
+        contentRoot = root.find('./' + ns + 'CORE-CONTENT/' + ns + 'REQ-IF-CONTENT')
 
+    else:
+        headerRoot = root
+        contentRoot = root
+
+    headerTags = getSubElementValuesByTitle(headerRoot, ['AUTHOR', 'COMMENT','COUNTRY-CODE','CREATION-TIME','SOURCE-TOOL-ID','TITLE','VERSION'])
+    #header missing:
+    #COMMENT, REPOSITORY-ID, REQ-IF-TOOL-ID, REQ-IF-VERSION
     doc.addHeader(reqif2py(headerTags))
     
 
-    datatypesXmlElement = root.find('./' + ns + 'DATATYPES')
+
+    datatypesXmlElement = contentRoot.find('./' + ns + 'DATATYPES')
     for child in datatypesXmlElement:
-            if child.tag == ns + "DATATYPE-DEFINITION-DOCUMENT":
+            if child.tag == ns + "DATATYPE-DEFINITION-DOCUMENT" or child.tag == ns + 'DATATYPE-DEFINITION-STRING' or child.tag == ns + 'DATATYPE-DEFINITION-XHTML':
                     datatypeProto = getSubElementValuesByTitle(child, ['EMBEDDED'])
                     datatypeProto['type'] = "document"
                     doc.addDatatype(reqif2py(datatypeProto))
@@ -103,24 +118,30 @@ def load(f):
                     datatypeProto['values'] = values   
                     doc.addDatatype(reqif2py(datatypeProto))
             else:
+                    # missing: 
+                    #DATATYPE-DEFINITION-BOOLEAN
+                    #DATATYPE-DEFINITION-DATE
+                    #DATATYPE-DEFINITION-INTEGER
+                    #DATATYPE-DEFINITION-REAL
                     print ("Not supported datatype: ",)
                     print (child.tag)
 
     
-    specTypesXmlElement = root.find('./' + ns + 'SPEC-TYPES')
+    specTypesXmlElement = contentRoot.find('./' + ns + 'SPEC-TYPES')
     for child in specTypesXmlElement:
-        if child.tag == ns + "SPEC-TYPE":
+        if child.tag == ns + "SPEC-TYPE" or child.tag == ns + "SPEC-OBJECT-TYPE":
             specType = getSubElementValuesByTitle(child, ['DESC'])
 #            specType = getSubElementValuesByTitle(child)
             attributesXml = child.find('./' + ns + "SPEC-ATTRIBUTES")
             if attributesXml is not None:
                 for attribute in attributesXml:
-                    if attribute.tag == ns +"ATTRIBUTE-DEFINITION-COMPLEX":
+                    if attribute.tag == ns +"ATTRIBUTE-DEFINITION-COMPLEX" or attribute.tag == ns +"ATTRIBUTE-DEFINITION-STRING" or attribute.tag == ns +"ATTRIBUTE-DEFINITION-XHTML":
                         specAttribType = getSubElementValuesByTitle(attribute)
                         specAttribType["type"] = "complex" 
                         typeTag = attribute.find('./' + ns + 'TYPE')
                         if typeTag is not None:
                             reference = typeTag.find('./' + ns + 'DATATYPE-DEFINITION-DOCUMENT-REF')
+                            reference = typeTag.getchildren()[0]
                             if doc.datatypeById(reference.text):
                                 specAttribType['typeRef'] = reference.text
                             else:
@@ -172,12 +193,14 @@ def load(f):
         ret = transform(thedoc)
         return ret
 
-    specObjectsXmlElement = root.find('./' + ns + 'SPEC-OBJECTS')
+    specObjectsXmlElement = contentRoot.find('./' + ns + 'SPEC-OBJECTS')
     for requirementXml in specObjectsXmlElement:
         if requirementXml.tag == ns + "SPEC-OBJECT":
             requirement = getSubElementValuesByTitle(requirementXml)
             
             typeRefXml = requirementXml.find('./' + ns + 'TYPE/' +ns + 'SPEC-TYPE-REF')
+            if typeRefXml is None:
+                typeRefXml = requirementXml.find('./' + ns + 'TYPE/' +ns + 'SPEC-OBJECT-TYPE-REF')
             if typeRefXml is not None:
                 requirement["typeRef"] = typeRefXml.text
                 
@@ -185,6 +208,7 @@ def load(f):
             values = {}
             for valueXml in valuesXml:
                 value = getSubElementValuesByTitle(valueXml)
+                #TODO : Support other types
                 if valueXml.tag == ns + 'ATTRIBUTE-VALUE-EMBEDDED-DOCUMENT':
                     attributeRefXml = valueXml.find('./' + ns + 'DEFINITION/' + ns + 'ATTRIBUTE-DEFINITION-COMPLEX-REF')
                     value['attributeRef'] = attributeRefXml.text
@@ -246,6 +270,7 @@ def load(f):
     for hierarchyRoot in hierarchyRoots:
         doc.hierarchy.append(getHierarchy(hierarchyRoot))
 
+    # SPEC-HIERARCHY
     relations = {}
     specRelsXml = root.find('./' + ns + 'SPEC-RELATIONS')
     if specRelsXml is not None:
