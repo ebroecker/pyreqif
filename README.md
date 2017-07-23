@@ -1,12 +1,14 @@
 # pyreqif
 
-## simple python representation of REQIF/RIF 1.2 Objects in Python ##
+## simple python representation of RIF (Exerpt/HIS/...) Objects in Python ##
+
+## ReqIF-Support planned but not implemented yet ##
 
 currently some basic support to convert: 
 * reqif2html.py:
-  converts given reqif.xml-File to html-File
+  converts given rif.xml-File to html-File
 * reqif2xlsx.py
-  converts given reqif.xml-File to xlsx-File (Excel)
+  converts given rif.xml-File to xlsx-File (Excel)
 * example.py
   use for own implementations (e.g. for import reqif-objects in own system)
 
