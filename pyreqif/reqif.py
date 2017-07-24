@@ -290,11 +290,11 @@ def load(f):
         for specRelXml in specRelsXml:
             if specRelXml.tag == ns + "SPEC-RELATION":
                 relation = getSubElementValuesByTitle(specRelXml)
-                typeRef = specRelXml.find('./' + ns + 'TYPE/' + ns + 'SPEC-TYPE-REF')
+                typeRef = specRelXml.find('./' + ns + 'TYPE')
                 if typeRef is not None:
-                    relation["typeRef"] = typeRef.text
+                    relation["typeRef"] = typeRef.getchildren()[0].text
                 sourceRef = specRelXml.find('./' + ns + 'SOURCE/' + ns + 'SPEC-OBJECT-REF')
-                if typeRef is not None:
+                if sourceRef is not None:
                     relation["sourceRef"] = sourceRef.text
                 targetRef = specRelXml.find('./' + ns + 'TARGET/' + ns + 'SPEC-OBJECT-REF')
                 if targetRef is not None:
