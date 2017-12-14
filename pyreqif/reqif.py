@@ -4,4 +4,3 @@ import rif
 
 def load(f):
     return rif.load(f)
-

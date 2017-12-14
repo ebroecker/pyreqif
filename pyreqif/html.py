@@ -53,7 +53,10 @@ def dump(myDoc, outfile, basepath = None):
             for col in cols:
                 htmlOutput += "<td>"
                 if col in tempReq:
-                    htmlOutput += tempReq[col]
+                    if tempReq[col] is not None:
+                        htmlOutput += tempReq[col]
+                    else:
+                        htmlOutput += ""
             htmlOutput += "</tr><tr>"
         htmlOutput += "</table>"
     fp = open(outfile, "wb")
