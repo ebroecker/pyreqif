@@ -222,8 +222,11 @@ def load(f):
                     value["type"] = "enum"
                     attributeRefXml = valueXml.find('./' + ns + 'DEFINITION/' + ns + 'ATTRIBUTE-DEFINITION-ENUMERATION-REF')
                     value['attributeRef'] = attributeRefXml.text
-                    contentXml = valueXml.find('./' + ns + 'VALUES/' + ns + 'ENUM-VALUE-REF')                
-                    value["contentRef"] = contentXml.text
+                    contentXml = valueXml.find('./' + ns + 'VALUES/' + ns + 'ENUM-VALUE-REF')
+                    if contentXml is not None:
+                        value["contentRef"] = contentXml.text
+                    else:
+                        value["contentRef"] = None
                 else:
                     print ("not supported yet:",)
                     print (valueXml.tag[len(ns):])
