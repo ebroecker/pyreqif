@@ -30,7 +30,7 @@ setup(
     name = "pyreqif",
     version = 0.1,
     maintainer = "Eduard Broecker",
-    maintainer_email = "eduard at gmx dot de",
+    maintainer_email = "eduard@gmx.de",
     url = "http://github.com/ebroecker/pyreqif",
     classifiers = filter(None, classifiers.split("\n")),
     description = doclines[0],

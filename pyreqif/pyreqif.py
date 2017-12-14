@@ -179,6 +179,8 @@ class requirementType(reqIfObject):
         if "desc" in kwargs:
             self._desc = kwargs["desc"]
             kwargs.pop("desc")
+        else:
+            self._desc = None
         for myType in kwargs:
             self._myTypes[myType] = reqTypeRefs(**kwargs[myType])
 
@@ -360,6 +362,8 @@ class specificationList(reqIfObject):
         self._list.append(mySpec)
     def __iter__(self):
         return iter(self._list)
+    def __len__(self):
+        return len(self._list)
 
 class hierarchy(reqIfObject):
     def __init__(self, **kwargs):
@@ -471,6 +475,17 @@ class doc(reqIfObject):
     
     @property
     def specificationList(self):
+        if len(self._specificationList) == 0:
+            def createFlatSpec(asd, spec):
+                spec.addReq(asd["reqifId"])
+                for id, child in asd["children"].iteritems():
+                    createFlatSpec(child, spec)
+
+            hierarchSpec = self.asHierarchDict()
+            spec = specification()
+            for id, topElement in hierarchSpec[0].iteritems():
+                createFlatSpec(topElement, spec)
+            self.addSpecification(spec)
         return self._specificationList
 
     @property

@@ -140,7 +140,8 @@ def load(f):
                         specAttribType["type"] = "complex" 
                         typeTag = attribute.find('./' + ns + 'TYPE')
                         if typeTag is not None:
-                            reference = typeTag.find('./' + ns + 'DATATYPE-DEFINITION-DOCUMENT-REF')
+                            reference = typeTag.getchildren()[0]
+#                            reference = typeTag.find('./' + ns + 'DATATYPE-DEFINITION-DOCUMENT-REF')
                             reference = typeTag.getchildren()[0]
                             if doc.datatypeById(reference.text):
                                 specAttribType['typeRef'] = reference.text
@@ -209,13 +210,19 @@ def load(f):
             for valueXml in valuesXml:
                 value = getSubElementValuesByTitle(valueXml)
                 #TODO : Support other types
-                if valueXml.tag == ns + 'ATTRIBUTE-VALUE-EMBEDDED-DOCUMENT':
-                    attributeRefXml = valueXml.find('./' + ns + 'DEFINITION/' + ns + 'ATTRIBUTE-DEFINITION-COMPLEX-REF')
+                if valueXml.tag == ns + 'ATTRIBUTE-VALUE-EMBEDDED-DOCUMENT' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-STRING' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-XHTML':
+                    attributeRefXml = valueXml.find('./' + ns + 'DEFINITION').getchildren()[0]
                     value['attributeRef'] = attributeRefXml.text
-                    contentXml = valueXml.find('./' + ns + 'XHTML-CONTENT/{http://automotive-his.de/200706/rif-xhtml}div')
+                    if 'THE-VALUE' in valueXml.attrib:
+                        value["content"] = valueXml.attrib['THE-VALUE']
+                    else:
+                        contentXml = valueXml.find('./' + ns + 'XHTML-CONTENT/{http://automotive-his.de/200706/rif-xhtml}div')
+                        if contentXml is None:
+                            contentXml = valueXml.find("./" + ns + 'THE-VALUE/{http://www.w3.org/1999/xhtml}div')
+
+                        value["content"] = etree.tostring(remove_namespaces(contentXml))
 
 #                    value["content"] = "".join(contentXml.itertext())
-                    value["content"] = etree.tostring(remove_namespaces(contentXml))
                     value["type"] = "embeddedDoc"
                     
                 elif valueXml.tag == ns + 'ATTRIBUTE-VALUE-ENUMERATION':
@@ -231,7 +238,7 @@ def load(f):
                     print ("not supported yet:",)
                     print (valueXml.tag[len(ns):])
 
-                values[value['identifier']] = reqif2py(value)
+                values[value['attributeRef']] = reqif2py(value)
             requirement["values"] = values
         else:
             print ("Unknown spec object tag:",)
@@ -239,19 +246,20 @@ def load(f):
         doc.addRequirement(reqif2py(requirement))
 
 
-    specGroupsXml = root.find('./' + ns + 'SPEC-GROUPS')
-    for specGroupXml in specGroupsXml:
-        if specGroupXml.tag == ns + "SPEC-GROUP":
-            specification = getSubElementValuesByTitle(specGroupXml, ['DESC'])
-            spec = pyreqif.pyreqif.specification(**reqif2py(specification))
-            
-            specObjectsXml = specGroupXml.find('./' + ns + 'SPEC-OBJECTS')
-            for specObjectRef in specObjectsXml:
-                spec.addReq(specObjectRef.text)
-            doc.addSpecification(spec)
+    specGroupsXml = contentRoot.find('./' + ns + 'SPEC-GROUPS')
+    if specGroupsXml is not None:
+        for specGroupXml in specGroupsXml:
+            if specGroupXml.tag == ns + "SPEC-GROUP":
+                specification = getSubElementValuesByTitle(specGroupXml, ['DESC'])
+                spec = pyreqif.pyreqif.specification(**reqif2py(specification))
+
+                specObjectsXml = specGroupXml.find('./' + ns + 'SPEC-OBJECTS')
+                for specObjectRef in specObjectsXml:
+                    spec.addReq(specObjectRef.text)
+                doc.addSpecification(spec)
 
 
-    def getHierarchy(hierarchyEle):
+    def getHierarchy(hierarchyEle, inputType):
         hierarchyDict = getSubElementValuesByTitle(hierarchyEle)
         typeRef = hierarchyEle.find('./' + ns + 'TYPE/' + ns + 'SPEC-TYPE-REF')
         if typeRef is not None:
@@ -265,26 +273,31 @@ def load(f):
         children = hierarchyEle.find('./' + ns + 'CHILDREN')
         if children is not None:
             for child in children:
-                hierarchy.addChild(getHierarchy(child))
+                hierarchy.addChild(getHierarchy(child, inputType))
         return hierarchy
 
         
-    hierarchyRoots = root.find('./' + ns + 'SPEC-HIERARCHY-ROOTS')
+    if inputType == "RIF":
+        hierarchyRoots = contentRoot.find('./' + ns + 'SPEC-HIERARCHY-ROOTS')
+    elif inputType == "REQIF":
+        hierarchyRoots = contentRoot.find('./' + ns + 'SPECIFICATIONS')
+
+
     for hierarchyRoot in hierarchyRoots:
-        doc.hierarchy.append(getHierarchy(hierarchyRoot))
+        doc.hierarchy.append(getHierarchy(hierarchyRoot, inputType))
 
     # SPEC-HIERARCHY
     relations = {}
-    specRelsXml = root.find('./' + ns + 'SPEC-RELATIONS')
+    specRelsXml = contentRoot.find('./' + ns + 'SPEC-RELATIONS')
     if specRelsXml is not None:
         for specRelXml in specRelsXml:
             if specRelXml.tag == ns + "SPEC-RELATION":
                 relation = getSubElementValuesByTitle(specRelXml)
-                typeRef = specRelXml.find('./' + ns + 'TYPE/' + ns + 'SPEC-TYPE-REF')
+                typeRef = specRelXml.find('./' + ns + 'TYPE')
                 if typeRef is not None:
-                    relation["typeRef"] = typeRef.text
+                    relation["typeRef"] = typeRef.getchildren()[0].text
                 sourceRef = specRelXml.find('./' + ns + 'SOURCE/' + ns + 'SPEC-OBJECT-REF')
-                if typeRef is not None:
+                if sourceRef is not None:
                     relation["sourceRef"] = sourceRef.text
                 targetRef = specRelXml.find('./' + ns + 'TARGET/' + ns + 'SPEC-OBJECT-REF')
                 if targetRef is not None:
