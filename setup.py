@@ -3,13 +3,15 @@
         supported file formats for import:
         
             .reqif
+            .rif
+
         
         
         supported file formats for export:
         
-            .reqif
-        
-            .xlsx
+            .rif 
+            
+	    .xlsx
             
             .html
 """
@@ -28,7 +30,7 @@ doclines = __doc__.split("\n")
 
 setup(
     name = "pyreqif",
-    version = 0.1,
+    version = 0.2,
     maintainer = "Eduard Broecker",
     maintainer_email = "eduard@gmx.de",
     url = "http://github.com/ebroecker/pyreqif",
