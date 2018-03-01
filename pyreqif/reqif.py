@@ -1,9 +1,39 @@
 import sys
 sys.path.append('..')
+import io
 import rif
+from lxml import etree
 
 def load(f):
     return rif.load(f)
+
+transLationTable = {"IDENTIFIER": "identifier",
+    "COUNTRY-CODE" : "countryCode",
+    "CREATION-TIME" : "creationTime",
+    "TITLE" : "title",
+    "COMMENT" : "comment",
+    "AUTHOR" : "author",
+    "LONG-NAME" : "longName",
+    "VERSION" : "version",
+    "SOURCE-TOOL-ID" : "sourceToolId",
+    "LAST-CHANGE" : "lastChange",
+    "EMBEDDED":"embedded",
+    "TYPE":"type",
+    "VALUES":"values",
+    "CONTENT-REF":"contentref",
+    "CONTENT":"content",
+    "DESC":"desc"}
+
+transLationTableReverse = dict(map(reversed, transLationTable.items()))
+
+
+def py2reqif(myDict):
+    for pyname in myDict:
+        if pyname in transLationTableReverse:
+            reqifname= transLationTableReverse[pyname]
+            myDict[reqifname] =  myDict.pop(pyname)
+    return myDict
+
 
 attributesForElements = ["IDENTIFIER", "LAST-CHANGE", "LONG-NAME", "MAX-LENGTH", "MAX", "MIN", "ACCURACY", "OTHER-CONTENT", "KEY", "MULTI-VALUED"]
 notUsedAttributes = ["COUNTRY-CODE","EMBEDDED", "AUTHOR", "VERSION", "DESC", "contentRef"]
@@ -173,7 +203,7 @@ def dump(doc, f):
             elif value == "typeRef":
                 typeXml = createSubElement(specXml, "TYPE")
                 createSubElement(typeXml, "SPEC-OBJECT-TYPE-REF", label)
-            elif element not in attributesForElements:
+            elif value not in attributesForElements:
                 createSubElement(specXml , value , label)
             
 

@@ -4,6 +4,8 @@ import io
 from lxml import etree
 import collections
 
+
+
 class reqIfObject(object):
     def __init__(self):
         self._identifier = None
@@ -212,8 +214,14 @@ class requirementTypeList(reqIfObject):
         self._list = []
         
     def add(self, myReqTypeDict):
-        self._list.append(requirementType(**myReqTypeDict))
-        
+        reqType = requirementType(**myReqTypeDict)
+        temp = self.byId(reqType._identifier)
+        if temp is None:
+            self._list.append(reqType)
+        else:
+            for id in reqType.myTypes.keys():
+                temp.myTypes[id] = reqType.myTypes[id]
+
     def byId(self, identifier):
         for reqType in self._list:
             if reqType._identifier == identifier:
@@ -317,8 +325,21 @@ class reqirement(reqIfObject):
 class reqirementList(reqIfObject):
     def __init__(self):
         self._list = []
+
     def add(self, myReqDict):
-        self._list.append(reqirement(**myReqDict))
+        myReq = reqirement(**myReqDict)
+        temp = self.byId(myReq._identifier)
+        if temp is None:
+            self._list.append(myReq)
+        else:
+            for id in myReq.values:
+                temp.values.append(id)
+
+    def byId(self, reqId):
+        for req in self._list:
+            if req._identifier == reqId:
+                return req
+
     def __iter__(self):
         return iter(self._list)
     
