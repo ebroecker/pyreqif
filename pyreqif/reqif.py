@@ -3,6 +3,7 @@ sys.path.append('..')
 import io
 import rif
 from lxml import etree
+import lxml.html
 
 def load(f):
     return rif.load(f)
@@ -190,10 +191,45 @@ def dump(doc, f):
                         elif val == "CONTENT":
                             if lab is not None:
                                 if "<" in lab:
-                                    labtree = etree.parse(io.BytesIO(lab))
-                                    labroot = labtree.getroot()
+                                    labtree = lxml.html.fromstring(lab)
+#                                        labtree = etree.parse(io.BytesIO(lab))
+                                    labroot = labtree #.getroot()
                                     for el in labroot.iter():
-                                        el.tag = '{http://www.w3.org/1999/xhtml}' + el.tag
+                                        if el.tag == "font" or el.tag == "height" or el.tag == "width":
+                                            el.drop_tag()
+                                            #for key in el.keys:
+                                        for attr in ["height", "width", "align"]:
+                                            if attr in el.keys():
+                                                del (el.attrib[attr])
+                                        if el.tag == "a":
+                                            el.tag = "object"
+                                            el.attrib["data"] = el.attrib["href"].replace(
+                                                'mks:///item/field?fieldid=Text Attachments&attachmentname=',
+                                                'attachments/')
+                                            del (el.attrib["href"])
+                                            if el.attrib["data"].endswith(".png"):
+                                                el.attrib["type"] = "image/png"
+                                            elif el.attrib["data"].endswith(".rtf"):
+                                                el.attrib["type"] = "text/x-rtf"
+
+                                        if el.tag == "img":
+                                            el.tag = "object"
+                                            el.attrib["data"] = el.attrib["src"].replace(
+                                                'mks:///item/field?fieldid=Text Attachments&attachmentname=',
+                                                'attachments/')
+
+                                            del (el.attrib["src"])
+                                            if "alt" in el.keys():
+                                                el.text = el.attrib["alt"]
+                                                del (el.attrib["alt"])
+                                            if el.attrib["data"].endswith(".png"):
+                                                el.attrib["type"] = "image/png"
+                                            elif el.attrib["data"].endswith(".rtf"):
+                                                el.attrib["type"] = "text/x-rtf"
+                                        try:
+                                            el.tag = '{http://www.w3.org/1999/xhtml}' + el.tag
+                                        except:
+                                            print "probably XML Comment found - ignoring"
                                     contentXml = createSubElement(valueXml, "THE-VALUE")
                                     contentXml.append(labroot)
                                 else:

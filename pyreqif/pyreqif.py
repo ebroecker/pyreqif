@@ -243,7 +243,7 @@ class reqirementItem(reqIfObject):
     def __init__(self, **kwargs):
         kwargs = reqIfObject.setValues(self, **kwargs)
         self.reqItem_args = [
-            ('contentRef', '_contentref', str, None),
+            ('contentRef', '_contentref', None, None),
             ('content', '_content', None, None),
             ('attributeRef', '_attributeref', str, None),
             ('type', '_type', str, None),            
@@ -554,8 +554,10 @@ class doc(reqIfObject):
             dataType = self.datatypeById(valueType._typeref)
 
             if value._contentref is not None:
-                if "longName" in dataType._valueTable[value._contentref]:
-                    reqDict[valueType._longname] = dataType._valueTable[value._contentref]["longName"]
+                reqDict[valueType._longname] = ""
+                for contentref in value._contentref:
+                    if "longName" in dataType._valueTable[contentref]:
+                        reqDict[valueType._longname] += dataType._valueTable[contentref]["longName"] + ","
             else:
                 reqDict[valueType._longname] = value._content
         return reqDict

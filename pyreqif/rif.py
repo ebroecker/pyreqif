@@ -99,7 +99,8 @@ def load(f):
 
     datatypesXmlElement = contentRoot.find('./' + ns + 'DATATYPES')
     for child in datatypesXmlElement:
-            if child.tag == ns + "DATATYPE-DEFINITION-DOCUMENT" or child.tag == ns + 'DATATYPE-DEFINITION-STRING' or child.tag == ns + 'DATATYPE-DEFINITION-XHTML':
+            if child.tag == ns + "DATATYPE-DEFINITION-DOCUMENT" or child.tag == ns + 'DATATYPE-DEFINITION-STRING' or child.tag == ns + 'DATATYPE-DEFINITION-XHTML'\
+                    or child.tag == ns + 'DATATYPE-DEFINITION-BOOLEAN' or child.tag == ns + "DATATYPE-DEFINITION-INTEGER":
                     datatypeProto = getSubElementValuesByTitle(child, ['EMBEDDED'])
                     datatypeProto['type'] = "document"
                     doc.addDatatype(reqif2py(datatypeProto))
@@ -135,7 +136,8 @@ def load(f):
             attributesXml = child.find('./' + ns + "SPEC-ATTRIBUTES")
             if attributesXml is not None:
                 for attribute in attributesXml:
-                    if attribute.tag == ns +"ATTRIBUTE-DEFINITION-COMPLEX" or attribute.tag == ns +"ATTRIBUTE-DEFINITION-STRING" or attribute.tag == ns +"ATTRIBUTE-DEFINITION-XHTML":
+                    if attribute.tag == ns +"ATTRIBUTE-DEFINITION-COMPLEX" or attribute.tag == ns +"ATTRIBUTE-DEFINITION-STRING" or attribute.tag == ns +"ATTRIBUTE-DEFINITION-XHTML"\
+                            or attribute.tag == ns + "ATTRIBUTE-DEFINITION-BOOLEAN" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-INTEGER" :
                         specAttribType = getSubElementValuesByTitle(attribute)
                         specAttribType["type"] = "complex" 
                         typeTag = attribute.find('./' + ns + 'TYPE')
@@ -210,7 +212,8 @@ def load(f):
             for valueXml in valuesXml:
                 value = getSubElementValuesByTitle(valueXml)
                 #TODO : Support other types
-                if valueXml.tag == ns + 'ATTRIBUTE-VALUE-EMBEDDED-DOCUMENT' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-STRING' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-XHTML':
+                if valueXml.tag == ns + 'ATTRIBUTE-VALUE-EMBEDDED-DOCUMENT' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-STRING' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-XHTML'\
+                        or valueXml.tag == ns + 'ATTRIBUTE-VALUE-BOOLEAN' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-INTEGER':
                     attributeRefXml = valueXml.find('./' + ns + 'DEFINITION').getchildren()[0]
                     value['attributeRef'] = attributeRefXml.text
                     if 'THE-VALUE' in valueXml.attrib:
@@ -229,13 +232,15 @@ def load(f):
                     value["type"] = "enum"
                     attributeRefXml = valueXml.find('./' + ns + 'DEFINITION/' + ns + 'ATTRIBUTE-DEFINITION-ENUMERATION-REF')
                     value['attributeRef'] = attributeRefXml.text
-                    contentXml = valueXml.find('./' + ns + 'VALUES/' + ns + 'ENUM-VALUE-REF')
+                    contentXml = valueXml.findall('./' + ns + 'VALUES/' + ns + 'ENUM-VALUE-REF')
                     if contentXml is not None:
-                        value["contentRef"] = contentXml.text
+                        value["contentRef"] = []
+                        for content in contentXml:
+                            value["contentRef"].append(content.text)
                     else:
                         value["contentRef"] = None
                 else:
-                    print ("not supported yet:",)
+                    print ("valueType not supported yet:",)
                     print (valueXml.tag[len(ns):])
 
                 values[value['attributeRef']] = reqif2py(value)
@@ -315,7 +320,7 @@ def createSubElements(parent, myDict):
         else:
             sn.text = 'None'
                 
-def createSubElement(parent, tag, text=None):
+def createSubElement(parent, tag, text=None, attributes=None):
     sn = etree.SubElement(parent, tag)
     if text is not None:
         sn.text = text

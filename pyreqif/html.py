@@ -31,24 +31,30 @@ def dump(myDoc, outfile, basepath = None):
             for col,value in myDoc.flatReq(reqObj, html=True).iteritems():
                 if value is not None:
                     if "<" in value:
-                        tree = etree.parse(io.BytesIO(value))
-                        root = tree.getroot()
-                        for element in root.iter("object"):
-                            rtfFilename = os.path.join(basepath, element.attrib["data"])
-                            files = ole2rtf.ole2rtf(rtfFilename)
-                            if len(files) > 0:
-                                name = element.attrib["name"]
+                        try:
+                            tree = etree.parse(io.BytesIO(value))
+                            root = tree.getroot()
+                            for element in root.iter("object"):
+                                rtfFilename = os.path.join(basepath, element.attrib["data"])
+                                files = ole2rtf.ole2rtf(rtfFilename)
+                                if len(files) > 0:
+                                    if "name" in element.attrib:
+                                        name = element.attrib["name"]
+                                    else:
+                                        name = ""
 
-                                for key in element.attrib:
-                                    del element.attrib[key]
-                                element.tag = "a"
-                                element.set("href", files[0])
-                                element.text = name
-                                imgElement = etree.Element("img")
-                                imgElement.set("src", os.path.splitext(files[0])[0] + ".png")
-                                element.append(imgElement)
+                                    for key in element.attrib:
+                                        del element.attrib[key]
+                                    element.tag = "a"
+                                    element.set("href", files[0])
+                                    element.text = name
+                                    imgElement = etree.Element("img")
+                                    imgElement.set("src", os.path.splitext(files[0])[0] + ".png")
+                                    element.append(imgElement)
 
-                        value = etree.tostring(root)
+                            value = etree.tostring(root)
+                        except:
+                            pass
                 tempReq[col] = value
             for col in cols:
                 htmlOutput += "<td>"

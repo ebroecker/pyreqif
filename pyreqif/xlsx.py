@@ -11,10 +11,13 @@ def dump(myDoc, outfile, basepath = None):
     workbook = xlsxwriter.Workbook(outfile)
 
     for specification in myDoc.specificationList:
-        if len(specification.name) > 31:
+        if specification.name is not None and len(specification.name) > 31:
             worksheet = workbook.add_worksheet(specification.name[:31])
-        else:
+        elif specification.name is not None:
             worksheet = workbook.add_worksheet(specification.name)
+        else:
+            worksheet = workbook.add_worksheet("Export")
+
         row = 0
         cols = myDoc.fields
 
@@ -29,21 +32,25 @@ def dump(myDoc, outfile, basepath = None):
             reqObj = myDoc.getReqById(req)
             for col,value in myDoc.flatReq(reqObj, html=True).iteritems():
                 if value is not None:
-                    if "<" in value:
-                        tree = etree.parse(io.BytesIO(value))
-                        root = tree.getroot()
-                        for element in root.iter("object"):
-                            rtfFilename = os.path.join(basepath, element.attrib["data"])
-                            files = extractOleData.extractOleData(rtfFilename)
-                            name = element.attrib["name"]
+                    if "<" in value and ">" in value:
+                        try:
+                            tree = etree.parse(io.BytesIO(value))
+                            root = tree.getroot()
+                            for element in root.iter("object"):
+                                rtfFilename = os.path.join(basepath, element.attrib["data"])
+                                files = extractOleData.extractOleData(rtfFilename)
+                                #name = element.attrib["name"]
 
-                            if len(files) > 0:
-                                for key in element.attrib:
-                                    del element.attrib[key]
-                                element.tag = "a"
-                                element.set("href", files[0])
-                                element.text = "linked file: " + files[0]
-                        value = "".join(root.itertext())
+                                if len(files) > 0:
+                                    for key in element.attrib:
+                                        del element.attrib[key]
+                                    element.tag = "a"
+                                    element.set("href", files[0])
+                                    element.text = "linked file: " + files[0]
+                            value = "".join(root.itertext())
+                        except:
+                            pass
+                            #print "ERROR with " + value
                 worksheet.write(row, cols.index(col), value)
                 if len(files) > 0:
                     worksheet.insert_image(row, cols.index(col), os.path.splitext(files[0])[0] + ".png")
