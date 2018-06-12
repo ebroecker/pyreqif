@@ -44,7 +44,7 @@ class header(reqIfObject):
             ('countryCode', '_countrycode', str, None),
             ('creationTime', '_creationtime', str, None),
             ('sourceToolId', '_sourceToolId', str, None),
-            ('title', '_title', str, None),
+            ('title', '_title', None, None),
             ('version', '_version', str, None),
             ('comment', '_comment', str, None),
         ]
@@ -173,7 +173,72 @@ class reqTypeRefs(reqIfObject):
             myDict["type"] = self._type
             
         return myDict
-        
+
+class specRelationGroup(reqIfObject):
+    def __init__(self, **kwargs):
+        self.sourceDoc = None
+        self.targetDoc = None
+        kwargs = reqIfObject.setValues(self, **kwargs)
+        if "desc" in kwargs:
+            self._desc = kwargs["desc"]
+            kwargs.pop("desc")
+        else:
+            self._desc = None
+        self.sourceDoc = kwargs["sourceDoc"]
+        self.targetDoc = kwargs["targetDoc"]
+        self.nameOfType = kwargs["longNameOfType"]
+        self.specRelationRefs = kwargs["specRelationRefs"]
+
+class specRelationGroupList(reqIfObject):
+    def __init__(self):
+        self._list = []
+    def add(self, myReqTypeDict):
+        reqType = specRelationGroup(**myReqTypeDict)
+        temp = self.byId(reqType._identifier)
+        if temp is None:
+            self._list.append(reqType)
+        else:
+            for id in reqType.myTypes.keys():
+                temp.myTypes[id] = reqType.myTypes[id]
+
+    def byId(self, identifier):
+        for relType in self._list:
+            if relType._identifier == identifier:
+                return relType
+
+    def __iter__(self):
+        return iter(self._list)
+
+class specRelationType(reqIfObject):
+    def __init__(self, **kwargs):
+        kwargs = reqIfObject.setValues(self, **kwargs)
+        if "desc" in kwargs:
+            self._desc = kwargs["desc"]
+            kwargs.pop("desc")
+        else:
+            self._desc = None
+
+class specRelationTypeList(reqIfObject):
+    def __init__(self):
+        self._list = []
+
+    def add(self, myReqTypeDict):
+        reqType = specRelationType(**myReqTypeDict)
+        temp = self.byId(reqType._identifier)
+        if temp is None:
+            self._list.append(reqType)
+        else:
+            for id in reqType.myTypes.keys():
+                temp.myTypes[id] = reqType.myTypes[id]
+
+    def byId(self, identifier):
+        for relType in self._list:
+            if relType._identifier == identifier:
+                return relType
+
+    def __iter__(self):
+        return iter(self._list)
+
 class requirementType(reqIfObject):
     def __init__(self, **kwargs):
         self._myTypes = {}
@@ -468,6 +533,8 @@ class doc(reqIfObject):
         self._requirementList = reqirementList()
         self._specificationList = specificationList()
         self._hierarchy = []
+        self._specRelationTypeList = specRelationTypeList()
+        self._specRelationGroupList = specRelationGroupList()
         self._relations = relationList()
     
     @property 
@@ -513,12 +580,26 @@ class doc(reqIfObject):
     def fields(self):
         return self._requirementTypeList.fields
 
+    @property
+    def specRelationTypeList(self):
+        return self._specRelationTypeList
+
+    @property
+    def specRelationGroupList(self):
+        return self._specRelationGroupList
+
     def addHeader(self, myHeader):
         self._header = header(**myHeader)
         
     def addDatatype(self, myDatatypeDict):
         self._datatypeList.add(myDatatypeDict)
-    
+
+    def addSpecRelationType(self, myDatatypeDict):
+        self._specRelationTypeList.add(myDatatypeDict)
+
+    def addSpecRelationGroup(self, myDatatypeDict):
+        self._specRelationGroupList.add(myDatatypeDict)
+
     def datatypeById(self, datatypeId):
         return self._datatypeList.byId(datatypeId)
     

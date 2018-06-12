@@ -117,6 +117,7 @@ def dump(doc, f):
     # SPEC-TYPES
     #
     specTypes = createSubElement(reqIfContent, "SPEC-TYPES")
+    #SPEC-OBJECT-TYPE
     for reqType in doc.requirementTypeList:
         specType = createSubElement(specTypes, "SPEC-OBJECT-TYPE", attributes=py2reqif(reqType.toDict()))
         createSubElements(specType,py2reqif(reqType.toDict()))
@@ -148,6 +149,15 @@ def dump(doc, f):
                             createSubElement(typeXml,"DATATYPE-DEFINITION-XHTML-REF",label)
                         elif value not in attributesForElements and value not in notUsedAttributes:
                             createSubElement(enumXml,value,label)
+    #SPEC-RELATION-TYPE
+    for relationType in doc.specRelationTypeList:
+        createSubElement(specTypes, "SPEC-RELATION-TYPE", attributes=py2reqif(relationType.toDict()))
+
+    #RELATION-GROUP-TYPE
+    for relationGroup in doc.specRelationGroupList:
+        attributes = py2reqif(relationGroup.toDict())
+        attributes['IDENTIFIER'] += "_type"
+        createSubElement(specTypes, "RELATION-GROUP-TYPE", attributes = attributes)
 
     #
     # SPEC-OBJECTS
@@ -248,19 +258,22 @@ def dump(doc, f):
     #
     specsRelXml = createSubElement(reqIfContent, "SPEC-RELATIONS")
     for relation in doc.relations:
-        specsRel = createSubElement(specsRelXml  , "SPEC-RELATION")
+        specsRel = createSubElement(specsRelXml  , "SPEC-RELATION", attributes=py2reqif(relation))
         for value,label in py2reqif(relation).iteritems():
             if value == "typeRef":
                 typeXml = createSubElement(specsRel , "TYPE")
-                createSubElement(typeXml , "SPEC-TYPE-REF", label)
+                createSubElement(typeXml , "SPEC-RELATION-TYPE-REF", label)
             elif value == "sourceRef":
                 sourceXml = createSubElement(specsRel , "SOURCE")
                 createSubElement(sourceXml, "SPEC-OBJECT-REF", label)
             elif value == "targetRef":
                 targetXml = createSubElement(specsRel , "TARGET")
                 createSubElement(targetXml, "SPEC-OBJECT-REF", label)
-            else:
-                createSubElement(specsRel , value, label)
+#            else:
+#                createSubElement(specsRel , value, label)
+            # RELATION-GROUP-TYPE
+
+
 
     #
     # SPEC-GROUPS
@@ -308,6 +321,25 @@ def dump(doc, f):
         for child in hierarch.children:
             createChildHirachy(specHierarchRootXml, child)
     
+
+    #
+    # SPEC-RELATION-GROUPS
+    #
+    specsRelGroupsXml = createSubElement(reqIfContent, "SPEC-RELATION-GROUPS")
+    for relationGroup in doc.specRelationGroupList:
+        tempAttributes =relationGroup.toDict()
+        tempAttributes["longName"] = relationGroup.nameOfType
+        specRelGroupXML = createSubElement(specsRelGroupsXml, "RELATION-GROUP", attributes=py2reqif(tempAttributes))
+        specRelations = createSubElement(specRelGroupXML, "SPEC-RELATIONS")
+        for specRel in relationGroup.specRelationRefs:
+            createSubElement(specRelations, "SPEC-RELATION-REF",specRel)
+        textXml = createSubElement(specRelGroupXML, "TYPE")
+        createSubElement(textXml, "RELATION-GROUP-TYPE-REF", text=relationGroup._identifier + "_type" )
+
+        sourceXML = createSubElement(specRelGroupXML, "SOURCE-SPECIFICATION")
+        createSubElement(sourceXML, "SPECIFICATION-REF", text=relationGroup.sourceDoc)
+        targetXML = createSubElement(specRelGroupXML, "TARGET-SPECIFICATION")
+        createSubElement(targetXML, "SPECIFICATION-REF", text=relationGroup.targetDoc)
 
     f.write(etree.tostring(root, pretty_print=True, xml_declaration=True))
 
