@@ -320,8 +320,8 @@ def dump(doc, f):
                 createSubElement(specHierarchRootXml, value, label)
 
         
-        for child in hierarch.children:
-            createChildHirachy(specHierarchRootXml, child)
+        if len(hierarch.children) > 0:
+            createChildHirachy(specHierarchRootXml, hierarch.children)
     
 
     #
