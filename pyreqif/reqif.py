@@ -291,20 +291,22 @@ def dump(doc, f):
     #
     # SPEC-HIERARCHY-ROOTS
     #
-    def createChildHirachy(parentXmlTag, childObject):
-        childrenXml = createSubElement(parentXmlTag, "CHILDREN")
-        hierarchXml = createSubElement(childrenXml, "SPEC-HIERARCHY", attributes=py2reqif(childObject.toDict()))
-        for value,label in py2reqif(childObject.toDict()).iteritems():
-            if value == "objectRef":
-                objectXml = createSubElement(hierarchXml , "OBJECT")
-                createSubElement(objectXml, "SPEC-OBJECT-REF", label)
-            elif value not in attributesForElements:
-                if label is not None:
-                    createSubElement(hierarchXml , value, label)
+    def createChildHirachy(parentXmlTag, childrenList):
+        childrenXml = createSubElement(parentXmlTag, 'CHILDREN')
+        for childObject in childrenList:
+            hierarchXml = createSubElement(childrenXml, 'SPEC-HIERARCHY', attributes=py2reqif(childObject.toDict()))
+            for value, label in py2reqif(childObject.toDict()).iteritems():
+                if value == 'objectRef':
+                    objectXml = createSubElement(hierarchXml, 'OBJECT')
+                    createSubElement(objectXml, 'SPEC-OBJECT-REF', label)
+                elif value not in attributesForElements:
+                    if label is not None:
+                        createSubElement(hierarchXml, value, label)
 
-        for child in childObject.children:
-            createChildHirachy(hierarchXml, child)
-    
+            if len(childObject.children) > 0:
+                createChildHirachy(hierarchXml, childObject.children)
+
+        return
     
     specHierarchRootsXml = createSubElement(reqIfContent, "SPECIFICATIONS")
     #SPEC-HIERARCHY-ROOT
