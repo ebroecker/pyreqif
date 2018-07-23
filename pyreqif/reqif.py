@@ -1,12 +1,12 @@
 import sys
 sys.path.append('..')
 import io
-import rif
+import pyreqif.rif
 from lxml import etree
 import lxml.html
 
 def load(f):
-    return rif.load(f)
+    return pyreqif.rif.load(f)
 
 transLationTable = {"IDENTIFIER": "identifier",
     "COUNTRY-CODE" : "countryCode",
@@ -52,7 +52,7 @@ def createSubElements(parent, myDict):
 def createSubElement(parent, tag, text=None, attributes=None):
     sn = etree.SubElement(parent, tag)
     if text is not None:
-        sn.text = text
+        sn.text = str(text)
     if attributes is not None:
         for attributeName in attributesForElements:
             if attributeName in attributes and attributes[attributeName] is not None and attributeName not in notUsedAttributes:
@@ -102,10 +102,12 @@ def dump(doc, f):
             del myDict["TYPE"]
             createSubElements(datatypeXml, myDict)
             specifiedValuesXml = createSubElement(datatypeXml, "SPECIFIED-VALUES")
-            for value,label in datatype.valueTable.iteritems():
+#            for value,label in datatype.valueTable.iteritems():
+            for value,label in datatype.valueTable.items():
                 valuesXml = createSubElement(specifiedValuesXml , "ENUM-VALUE", attributes=py2reqif(label) )
                 #createSubElement(valuesXml, "IDENTIFIER", value)
-                for element,content in py2reqif(label).iteritems():
+#                for element,content in py2reqif(label).iteritems():
+                for element, content in py2reqif(label).items():
                     if element == "properites":
                         props = createSubElement(valuesXml, "PROPERTIES")
                         createSubElement(props, "EMBEDDED-VALUE", attributes=py2reqif(content))
@@ -125,13 +127,15 @@ def dump(doc, f):
         if len(reqType.myTypes) > 0:
             attributesXml = createSubElement(specType,"SPEC-ATTRIBUTES")
 
-            for mytype,ref in reqType.myTypes.iteritems():
+#            for mytype,ref in reqType.myTypes.iteritems():
+            for mytype,ref in reqType.myTypes.items():
                 attribDict = py2reqif(ref.toDict())
                 if "TYPE" in attribDict and attribDict["TYPE"] == "enum":
                     attribDict.pop("TYPE")
                     attribDict["MULTI-VALUED"] = "false"
                     enumXml = createSubElement(attributesXml,"ATTRIBUTE-DEFINITION-ENUMERATION", attributes=attribDict)
-                    for value,label in attribDict.iteritems():
+#                    for value,label in attribDict.iteritems():
+                    for value, label in attribDict.items():
                         if value == "typeRef":
                             typeXml = createSubElement(enumXml,"TYPE")
                             createSubElement(typeXml,"DATATYPE-DEFINITION-ENUMERATION-REF",label)
@@ -143,7 +147,8 @@ def dump(doc, f):
 #                    attribDict.pop("TYPE")
                     enumXml = createSubElement(attributesXml,"ATTRIBUTE-DEFINITION-XHTML", attributes=attribDict)
                     attribDict.pop("TYPE")
-                    for value,label in attribDict.iteritems():
+#                    for value,label in attribDict.iteritems():
+                    for value,label in attribDict.items():
                         if value == "typeRef":
                             typeXml = createSubElement(enumXml,"TYPE")
                             createSubElement(typeXml,"DATATYPE-DEFINITION-XHTML-REF",label)
@@ -167,7 +172,8 @@ def dump(doc, f):
     for req in doc.requirementList:
         specXml = createSubElement(specsXml , "SPEC-OBJECT", attributes=py2reqif(req.toDict()))
         requirementDict = py2reqif(req.toDict())
-        for value,label in requirementDict.iteritems():
+#        for value,label in requirementDict.iteritems():
+        for value, label in requirementDict.items():
             if value == "VALUES":
                 valuesXml = createSubElement(specXml, "VALUES")
                 for value in label:
@@ -185,7 +191,8 @@ def dump(doc, f):
                     else:
                         valueXml = createSubElement(valuesXml, "ATTRIBUTE-VALUE-XHTML", attributes=tempDict)
                         valuesDefinitionsXml = createSubElement(valueXml, "DEFINITION")
-                    for val,lab in py2reqif(value.toDict()).iteritems():
+#                    for val,lab in py2reqif(value.toDict()).iteritems():
+                    for val,lab in py2reqif(value.toDict()).items():
                         if val == "contentRef" and lab is not None:
                             createSubElement(valuesValuesXml, "ENUM-VALUE-REF",lab)
                         elif val == "attributeRef":
@@ -194,13 +201,13 @@ def dump(doc, f):
                             elif value.mytype == "embeddedDoc":
                                 createSubElement(valuesDefinitionsXml, "ATTRIBUTE-DEFINITION-XHTML-REF", lab)
                             else:
-                                print "Unknown Type " + value.mytype
+                                print ("Unknown Type " + value.mytype)
                             
                         elif val == "TYPE":
                             pass
                         elif val == "CONTENT":
                             if lab is not None:
-                                if "<" in lab:
+                                if "<" in str(lab):
                                     labtree = lxml.html.fromstring(lab)
 #                                        labtree = etree.parse(io.BytesIO(lab))
                                     labroot = labtree #.getroot()
@@ -239,7 +246,7 @@ def dump(doc, f):
                                         try:
                                             el.tag = '{http://www.w3.org/1999/xhtml}' + el.tag
                                         except:
-                                            print "probably XML Comment found - ignoring"
+                                            print ("probably XML Comment found - ignoring")
                                     contentXml = createSubElement(valueXml, "THE-VALUE")
                                     contentXml.append(labroot)
                                 else:
@@ -295,7 +302,8 @@ def dump(doc, f):
         childrenXml = createSubElement(parentXmlTag, 'CHILDREN')
         for childObject in childrenList:
             hierarchXml = createSubElement(childrenXml, 'SPEC-HIERARCHY', attributes=py2reqif(childObject.toDict()))
-            for value, label in py2reqif(childObject.toDict()).iteritems():
+#            for value, label in py2reqif(childObject.toDict()).iteritems():
+            for value, label in py2reqif(childObject.toDict()).items():
                 if value == 'objectRef':
                     objectXml = createSubElement(hierarchXml, 'OBJECT')
                     createSubElement(objectXml, 'SPEC-OBJECT-REF', label)
@@ -312,7 +320,8 @@ def dump(doc, f):
     #SPEC-HIERARCHY-ROOT
     for hierarch in doc.hierarchy:
         specHierarchRootXml = createSubElement(specHierarchRootsXml, "SPECIFICATION", attributes=py2reqif(hierarch.toDict()))
-        for value,label in py2reqif(hierarch.toDict()).iteritems():
+#        for value,label in py2reqif(hierarch.toDict()).iteritems():
+        for value, label in py2reqif(hierarch.toDict()).items():
             if value == "typeRef":
                 typeXml = createSubElement(specHierarchRootXml, "TYPE")
                 createSubElement(typeXml, "SPECIFICATION-TYPE-REF", label)
@@ -343,5 +352,5 @@ def dump(doc, f):
         targetXML = createSubElement(specRelGroupXML, "TARGET-SPECIFICATION")
         createSubElement(targetXML, "SPECIFICATION-REF", text=relationGroup.targetDoc)
 
-    f.write(etree.tostring(root, pretty_print=True, xml_declaration=True))
+    f.write(str(etree.tostring(root, pretty_print=True, xml_declaration=True)))
 
