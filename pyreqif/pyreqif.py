@@ -101,7 +101,8 @@ class datatype(reqIfObject):
         if "values" in kwargs:
             self._isValueTable = True
             self._valueTable = {}
-            for valId, value in kwargs["values"].iteritems(): 
+#            for valId, value in kwargs["values"].iteritems():
+            for valId, value in kwargs["values"].items():
                 self._valueTable[valId] = value
             kwargs.pop("values")
 
@@ -259,7 +260,8 @@ class requirementType(reqIfObject):
     @property
     def fields(self):
         fields = []
-        for type,typeObj in self._myTypes.iteritems():
+#        for type,typeObj in self._myTypes.iteritems():
+        for type, typeObj in self._myTypes.items():
             fields.append(typeObj._longname)
         return fields
 
@@ -355,7 +357,8 @@ class reqirement(reqIfObject):
             kwargs.pop("typeRef")
         else:
             self._typeref = None
-        for ident, value in kwargs["values"].iteritems():
+#        for ident, value in kwargs["values"].iteritems():
+        for ident, value in kwargs["values"].items():
             self._values.append(reqirementItem(**value))
     
     @property 
@@ -621,7 +624,8 @@ class doc(reqIfObject):
         reqDict = {}
         reqType = self.requirementTypeList.byId(requirement._typeref)
 
-        for myTypeId,myType in reqType.myTypes.iteritems():
+#        for myTypeId,myType in reqType.myTypes.iteritems():
+        for myTypeId, myType in reqType.myTypes.items():
             if myType._defaultValue is not None:
                 dataType = self.datatypeById(myType._typeref)
                 reqDict[myType._longname] = dataType._valueTable[myType._defaultValue]["longName"]

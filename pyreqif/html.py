@@ -3,11 +3,11 @@
 
 import io
 import os.path
-import ole2rtf
+#import ole2rtf
 from lxml import etree
 import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
+#reload(sys)
+#sys.setdefaultencoding('utf8')
 
 
 def dump(myDoc, outfile, basepath = None):
@@ -28,9 +28,10 @@ def dump(myDoc, outfile, basepath = None):
         for req in specification:
             reqObj = myDoc.getReqById(req)
             tempReq ={}
-            for col,value in myDoc.flatReq(reqObj, html=True).iteritems():
+#            for col,value in myDoc.flatReq(reqObj, html=True).iteritems():
+            for col,value in myDoc.flatReq(reqObj, html=True).items():
                 if value is not None:
-                    if "<" in value:
+                    if "<" in str(value):
                         try:
                             tree = etree.parse(io.BytesIO(value))
                             root = tree.getroot()
@@ -64,11 +65,11 @@ def dump(myDoc, outfile, basepath = None):
                 htmlOutput += "<td>"
                 if col in tempReq:
                     if tempReq[col] is not None:
-                        htmlOutput += tempReq[col]
+                        htmlOutput += str(tempReq[col])
                     else:
                         htmlOutput += ""
             htmlOutput += "</tr><tr>"
         htmlOutput += "</table>"
     fp = open(outfile, "wb")
-    fp.write(htmlOutput)
+    fp.write(bytes(htmlOutput, "utf8"))
     fp.close()

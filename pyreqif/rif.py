@@ -191,7 +191,8 @@ def load(f):
         </xsl:stylesheet>
         '''
 
-        xslt_doc = etree.parse(io.BytesIO(xslt))
+#        xslt_doc = etree.parse(io.BytesIO(xslt))
+        xslt_doc = etree.parse(io.BytesIO(bytes(xslt, "utf8")))
         transform = etree.XSLT(xslt_doc)
         ret = transform(thedoc)
         return ret
@@ -459,7 +460,7 @@ def dump(doc, f):
                             elif value.mytype == "embeddedDoc":
                                 createSubElement(valuesDefinitionsXml, "ATTRIBUTE-DEFINITION-XHTML-REF", lab)
                             else:
-                                print "Unknown Type " + value.mytype
+                                print ("Unknown Type " + value.mytype)
                             
                         elif val == "TYPE":
                             pass
