@@ -43,19 +43,25 @@ transLationTable = {"IDENTIFIER": "identifier",
 transLationTableReverse = dict(map(reversed, transLationTable.items()))
 
 def py2reqif(myDict):
+    MyNewDict = {}
     for pyname in myDict:
         if pyname in transLationTableReverse:
             reqifname= transLationTableReverse[pyname]
-            myDict[reqifname] =  myDict.pop(pyname)
-    return myDict
+            MyNewDict[reqifname] = myDict[pyname]
+        else:
+            MyNewDict[pyname] = myDict[pyname]
+    return MyNewDict
 
 
 def reqif2py(myDict):
+    MyNewDict = {}
     for reqifname in myDict:
         if reqifname in transLationTable:
             pyname = transLationTable[reqifname]
-            myDict[pyname] =  myDict.pop(reqifname)
-    return myDict
+            MyNewDict[pyname] = myDict[reqifname]
+        else:
+            MyNewDict[reqifname] = myDict[reqifname]
+    return MyNewDict
     
             
 def load(f):
@@ -162,7 +168,10 @@ def load(f):
                     else:
                         print ("Not supported Attribute: ",)
                         print (attribute.tag)
-                    specType[specAttribType['identifier']] = reqif2py(specAttribType)
+                        
+                    specAttribType = reqif2py(specAttribType)
+                    specType[specAttribType['identifier']] = specAttribType
+
 #                    specType[specAttribType['identifier']].pop('identifier')
             doc.addRequirementType(reqif2py(specType))
 
