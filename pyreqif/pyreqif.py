@@ -619,6 +619,11 @@ class doc(reqIfObject):
         for req in self._requirementList._list:
             if req._identifier == reqId:
                 return req
+
+    def getReqByLongName(self, reqLongName):
+        for req in self._requirementList._list:
+            if req._longname == reqLongName:
+                return req
             
     def flatReq(self, requirement, **kwargs):
         reqDict = {}
