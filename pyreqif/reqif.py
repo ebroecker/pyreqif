@@ -29,11 +29,14 @@ transLationTableReverse = dict(map(reversed, transLationTable.items()))
 
 
 def py2reqif(myDict):
+    MyNewDict = {}
     for pyname in myDict:
         if pyname in transLationTableReverse:
             reqifname= transLationTableReverse[pyname]
-            myDict[reqifname] =  myDict.pop(pyname)
-    return myDict
+            MyNewDict[reqifname] = myDict[pyname]
+        else:
+            MyNewDict[pyname] = myDict[pyname]
+    return MyNewDict
 
 
 attributesForElements = ["IDENTIFIER", "LAST-CHANGE", "LONG-NAME", "MAX-LENGTH", "MAX", "MIN", "ACCURACY", "OTHER-CONTENT", "KEY", "MULTI-VALUED"]
@@ -49,12 +52,15 @@ def createSubElements(parent, myDict):
         else:
             sn.text = 'None'
                 
-def createSubElement(parent, tag, text=None, attributes=None):
+def createSubElement(parent, tag, text=None, attributes=None, additionalAttributesForElements = []):
     sn = etree.SubElement(parent, tag)
     if text is not None:
         sn.text = str(text)
     if attributes is not None:
         for attributeName in attributesForElements:
+            if attributeName in attributes and attributes[attributeName] is not None and attributeName not in notUsedAttributes:
+                sn.attrib[attributeName] = attributes[attributeName]
+        for attributeName in additionalAttributesForElements:
             if attributeName in attributes and attributes[attributeName] is not None and attributeName not in notUsedAttributes:
                 sn.attrib[attributeName] = attributes[attributeName]
     return sn
@@ -94,6 +100,11 @@ def dump(doc, f):
         if datatype.mytype == "document":
             myDict = py2reqif(datatype.toDict())
             datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-XHTML", attributes=myDict)
+            del myDict["TYPE"]
+            createSubElements(datatypeXml, myDict)
+        if datatype.mytype == "string":
+            myDict = py2reqif(datatype.toDict())
+            datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-STRING", attributes=myDict)
             del myDict["TYPE"]
             createSubElements(datatypeXml, myDict)
         if datatype.mytype == "enum":
@@ -142,7 +153,6 @@ def dump(doc, f):
                         elif value not in attributesForElements:
                             createSubElement(enumXml,value,label)
 
-
                 if "TYPE" in attribDict and attribDict["TYPE"] == "complex":
 #                    attribDict.pop("TYPE")
                     enumXml = createSubElement(attributesXml,"ATTRIBUTE-DEFINITION-XHTML", attributes=attribDict)
@@ -152,6 +162,18 @@ def dump(doc, f):
                         if value == "typeRef":
                             typeXml = createSubElement(enumXml,"TYPE")
                             createSubElement(typeXml,"DATATYPE-DEFINITION-XHTML-REF",label)
+                        elif value not in attributesForElements and value not in notUsedAttributes:
+                            createSubElement(enumXml,value,label)
+
+                if "TYPE" in attribDict and attribDict["TYPE"] == "string":
+#                    attribDict.pop("TYPE")
+                    enumXml = createSubElement(attributesXml,"ATTRIBUTE-DEFINITION-STRING", attributes=attribDict)
+                    attribDict.pop("TYPE")
+#                    for value,label in attribDict.iteritems():
+                    for value,label in attribDict.items():
+                        if value == "typeRef":
+                            typeXml = createSubElement(enumXml,"TYPE")
+                            createSubElement(typeXml,"DATATYPE-DEFINITION-STRING-REF",label)
                         elif value not in attributesForElements and value not in notUsedAttributes:
                             createSubElement(enumXml,value,label)
     #SPEC-RELATION-TYPE
@@ -188,18 +210,30 @@ def dump(doc, f):
                         valueXml = createSubElement(valuesXml, "ATTRIBUTE-VALUE-ENUMERATION", attributes=tempDict)
                         valuesValuesXml = createSubElement(valueXml, "VALUES")
                         valuesDefinitionsXml = createSubElement(valueXml, "DEFINITION")
-                    else:
+                    elif value.mytype == "string":
+                        tempDict["THE-VALUE"] = tempDict['CONTENT']
+                        tempDict.pop('CONTENT', None)
+                        value._content=None
+                        valueXml = createSubElement(valuesXml, "ATTRIBUTE-VALUE-STRING", attributes=tempDict, additionalAttributesForElements=['THE-VALUE'])
+                        valuesDefinitionsXml = createSubElement(valueXml, "DEFINITION")
+                    elif value.mytype == "embeddedDoc":
                         valueXml = createSubElement(valuesXml, "ATTRIBUTE-VALUE-XHTML", attributes=tempDict)
                         valuesDefinitionsXml = createSubElement(valueXml, "DEFINITION")
+                    else:
+                        print ("Unknown Type " + value.mytype)                        
+
 #                    for val,lab in py2reqif(value.toDict()).iteritems():
                     for val,lab in py2reqif(value.toDict()).items():
                         if val == "contentRef" and lab is not None:
-                            createSubElement(valuesValuesXml, "ENUM-VALUE-REF",lab)
+                            for elem in lab:
+                                createSubElement(valuesValuesXml, "ENUM-VALUE-REF",elem)
                         elif val == "attributeRef":
                             if value.mytype == "enum":
                                 createSubElement(valuesDefinitionsXml, "ATTRIBUTE-DEFINITION-ENUMERATION-REF", lab)
                             elif value.mytype == "embeddedDoc":
                                 createSubElement(valuesDefinitionsXml, "ATTRIBUTE-DEFINITION-XHTML-REF", lab)
+                            elif value.mytype == "string":
+                                createSubElement(valuesDefinitionsXml, "ATTRIBUTE-DEFINITION-STRING-REF", lab)
                             else:
                                 print ("Unknown Type " + value.mytype)
                             
@@ -351,6 +385,6 @@ def dump(doc, f):
         createSubElement(sourceXML, "SPECIFICATION-REF", text=relationGroup.sourceDoc)
         targetXML = createSubElement(specRelGroupXML, "TARGET-SPECIFICATION")
         createSubElement(targetXML, "SPECIFICATION-REF", text=relationGroup.targetDoc)
-
-    f.write(str(etree.tostring(root, pretty_print=True, xml_declaration=True)))
-
+    
+    xmlData = etree.tostring(root, pretty_print=True, xml_declaration=True)
+    f.write(xmlData.decode("utf-8"))

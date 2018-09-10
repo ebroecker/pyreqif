@@ -12,8 +12,7 @@ import sys
 sys.path.append('..')
 import pyreqif.pyreqif
 from pprint import pprint
-       
-       
+import re
 
 def pretty(d, indent=0):
     for key, value in d.iteritems():
@@ -40,7 +39,80 @@ transLationTable = {"IDENTIFIER": "identifier",
     "CONTENT":"content",
     "DESC":"desc"}
 
+mapReqifAttributeValue = {"default": "embeddedDoc",
+                          "ATTRIBUTE-VALUE-EMBEDDED-DOCUMENT":"embeddedDoc",
+                          "ATTRIBUTE-VALUE-STRING":"string",
+                          "ATTRIBUTE-VALUE-XHTML":"embeddedDoc",
+                          "ATTRIBUTE-VALUE-BOOLEAN":"embeddedDoc",
+                          "ATTRIBUTE-VALUE-INTEGER":"embeddedDoc"}
+
+mapReqifAttributeDefinition = {"default": "complex",
+                          "ATTRIBUTE-DEFINITION-COMPLEX":"complex",
+                          "ATTRIBUTE-DEFINITION-STRING":"string",
+                          "ATTRIBUTE-DEFINITION-XHTML":"complex",
+                          "ATTRIBUTE-DEFINITION-BOOLEAN":"complex",
+                          "ATTRIBUTE-DEFINITION-INTEGER":"complex"}
+
+mapReqifDatatypeDefinition = {"default": "document",
+                          "DATATYPE-DEFINITION-DOCUMENT":"document",
+                          "DATATYPE-DEFINITION-STRING":"string",
+                          "DATATYPE-DEFINITION-XHTML":"document",
+                          "DATATYPE-DEFINITION-BOOLEAN":"document",
+                          "DATATYPE-DEFINITION-INTEGER":"document"}
+
 transLationTableReverse = dict(map(reversed, transLationTable.items()))
+
+mapReqifAttributeValueReversed = dict(map(reversed, mapReqifAttributeValue.items()))
+mapReqifAttributeDefinitionReversed = dict(map(reversed, mapReqifAttributeDefinition.items()))
+mapReqifDatatypeDefinitionReversed = dict(map(reversed, mapReqifDatatypeDefinition.items()))
+
+def mapReqifAttributeValue2Py(elem:str):
+    if elem in mapReqifAttributeValue:
+        return mapReqifAttributeValue[elem]
+    else:
+        print ("Not supported datatype: ")
+        print (elem)
+    return mapReqifAttributeValue['default']
+
+def mapPy2ReqifAttributeValue(elem:str):
+    if elem in mapReqifAttributeValueReversed:
+        return mapReqifAttributeValueReversed[elem]
+    else:
+        print ("Not supported datatype: ")
+        print (elem)
+    return mapReqifAttributeValueReversed['default']
+
+def mapReqifAttributeDefinition2Py(elem:str):
+    if elem in mapReqifAttributeDefinition:
+        return mapReqifAttributeDefinition[elem]
+    else:
+        print ("Not supported attribute definition: ")
+        print (elem)
+    return mapReqifAttributeDefinition['default']
+
+def mapPy2ReqifAttributeDefinition(elem:str):
+    if elem in mapReqifAttributeDefinitionReversed:
+        return mapReqifAttributeDefinitionReversed[elem]
+    else:
+        print ("Not supported attribute definition: ")
+        print (elem)
+    return mapReqifAttributeDefinitionReversed['default']
+
+def mapReqifDatatypeDefinition2Py(elem:str):
+    if elem in mapReqifDatatypeDefinition:
+        return mapReqifDatatypeDefinition[elem]
+    else:
+        print ("Not supported datatype definition: ")
+        print (elem)
+    return mapReqifDatatypeDefinition['default']
+
+def mapPy2ReqifDatatypeDefinition(elem:str):
+    if elem in mapReqifDatatypeDefinitionReversed:
+        return mapReqifDatatypeDefinitionReversed[elem]
+    else:
+        print ("Not supported datatype datatype: ")
+        print (elem)
+    return mapReqifDatatypeDefinitionReversed['default']
 
 def py2reqif(myDict):
     MyNewDict = {}
@@ -108,7 +180,8 @@ def load(f):
             if child.tag == ns + "DATATYPE-DEFINITION-DOCUMENT" or child.tag == ns + 'DATATYPE-DEFINITION-STRING' or child.tag == ns + 'DATATYPE-DEFINITION-XHTML'\
                     or child.tag == ns + 'DATATYPE-DEFINITION-BOOLEAN' or child.tag == ns + "DATATYPE-DEFINITION-INTEGER":
                     datatypeProto = getSubElementValuesByTitle(child, ['EMBEDDED'])
-                    datatypeProto['type'] = "document"
+                    tagWithoutNamespace = re.sub('{[\S]*}', '', child.tag)
+                    datatypeProto['type'] = mapReqifDatatypeDefinition2Py(tagWithoutNamespace)
                     doc.addDatatype(reqif2py(datatypeProto))
 
             elif child.tag == ns + "DATATYPE-DEFINITION-ENUMERATION":
@@ -121,7 +194,8 @@ def load(f):
                         properties = valElement.find('./' + ns + "PROPERTIES")
                         embeddedValue = properties.find('./' + ns + "EMBEDDED-VALUE")
                         tempDict['properites']  = reqif2py(getSubElementValuesByTitle(embeddedValue, ['KEY','OTHER-CONTENT']) )
-                        values[tempDict['identifier']] = reqif2py(tempDict) 
+                        tempDict = reqif2py(tempDict)
+                        values[tempDict['identifier']] = tempDict
                     datatypeProto['values'] = values   
                     doc.addDatatype(reqif2py(datatypeProto))
             else:
@@ -145,7 +219,8 @@ def load(f):
                     if attribute.tag == ns +"ATTRIBUTE-DEFINITION-COMPLEX" or attribute.tag == ns +"ATTRIBUTE-DEFINITION-STRING" or attribute.tag == ns +"ATTRIBUTE-DEFINITION-XHTML"\
                             or attribute.tag == ns + "ATTRIBUTE-DEFINITION-BOOLEAN" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-INTEGER" :
                         specAttribType = getSubElementValuesByTitle(attribute)
-                        specAttribType["type"] = "complex" 
+                        tagWithoutNamespace = re.sub('{[\S]*}', '', attribute.tag)
+                        specAttribType["type"] = mapReqifAttributeDefinition2Py(tagWithoutNamespace)
                         typeTag = attribute.find('./' + ns + 'TYPE')
                         if typeTag is not None:
                             reference = typeTag.getchildren()[0]
@@ -236,7 +311,9 @@ def load(f):
                         value["content"] = etree.tostring(remove_namespaces(contentXml))
 
 #                    value["content"] = "".join(contentXml.itertext())
-                    value["type"] = "embeddedDoc"
+
+                    tagWithoutNamespace = re.sub('{[\S]*}', '', valueXml.tag)
+                    value["type"] = mapReqifAttributeValue2Py(tagWithoutNamespace)
                     
                 elif valueXml.tag == ns + 'ATTRIBUTE-VALUE-ENUMERATION':
                     value["type"] = "enum"
@@ -247,6 +324,7 @@ def load(f):
                         value["contentRef"] = []
                         for content in contentXml:
                             value["contentRef"].append(content.text)
+                        a=1
                     else:
                         value["contentRef"] = None
                 else:
@@ -381,6 +459,11 @@ def dump(doc, f):
             datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-XHTML", attributes=myDict)
             del myDict["TYPE"]
             createSubElements(datatypeXml, myDict)
+        if datatype.mytype == "string":
+            myDict = py2reqif(datatype.toDict())
+            datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-STRING", attributes=myDict)
+            del myDict["TYPE"]
+            createSubElements(datatypeXml, myDict)
         if datatype.mytype == "enum":
             datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-ENUMERATION", attributes=py2reqif(datatype.toDict()))
             myDict = py2reqif(datatype.toDict())
@@ -434,6 +517,17 @@ def dump(doc, f):
                         elif value not in attributesForElements and value not in notUsedAttributes:
                             createSubElement(enumXml,value,label)
 
+                if "TYPE" in attribDict and attribDict["TYPE"] == "string":
+#                    attribDict.pop("TYPE")
+                    enumXml = createSubElement(attributesXml,"ATTRIBUTE-DEFINITION-STRING", attributes=attribDict)
+                    attribDict.pop("TYPE")
+                    for value,label in attribDict.iteritems():
+                        if value == "typeRef":
+                            typeXml = createSubElement(enumXml,"TYPE")
+                            createSubElement(typeXml,"DATATYPE-DEFINITION-STRING-REF",label)
+                        elif value not in attributesForElements and value not in notUsedAttributes:
+                            createSubElement(enumXml,value,label)
+
     #
     # SPEC-OBJECTS
     #
@@ -468,6 +562,8 @@ def dump(doc, f):
                                 createSubElement(valuesDefinitionsXml, "ATTRIBUTE-DEFINITION-ENUMERATION-REF", lab)
                             elif value.mytype == "embeddedDoc":
                                 createSubElement(valuesDefinitionsXml, "ATTRIBUTE-DEFINITION-XHTML-REF", lab)
+                            elif value.mytype == "string":
+                                createSubElement(valuesDefinitionsXml, "ATTRIBUTE-DEFINITION-STRING-REF", lab)
                             else:
                                 print ("Unknown Type " + value.mytype)
                             
