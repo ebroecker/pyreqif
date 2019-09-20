@@ -300,7 +300,7 @@ def dump(doc, f):
     specsRelXml = createSubElement(reqIfContent, "SPEC-RELATIONS")
     for relation in doc.relations:
         specsRel = createSubElement(specsRelXml  , "SPEC-RELATION", attributes=py2reqif(relation))
-        for value,label in py2reqif(relation).iteritems():
+        for value,label in py2reqif(relation).items():
             if value == "typeRef":
                 typeXml = createSubElement(specsRel , "TYPE")
                 createSubElement(typeXml , "SPEC-RELATION-TYPE-REF", label)

@@ -569,12 +569,12 @@ class doc(reqIfObject):
         if len(self._specificationList) == 0:
             def createFlatSpec(asd, spec):
                 spec.addReq(asd["reqifId"])
-                for id, child in asd["children"].iteritems():
+                for id, child in asd["children"].items():
                     createFlatSpec(child, spec)
 
             hierarchSpec = self.asHierarchDict()
             spec = specification()
-            for id, topElement in hierarchSpec[0].iteritems():
+            for id, topElement in hierarchSpec[0].items():
                 createFlatSpec(topElement, spec)
             self.addSpecification(spec)
         return self._specificationList
@@ -672,7 +672,7 @@ class doc(reqIfObject):
         tempReq = collections.OrderedDict()
         for col in cols:
             tempReq[col] = ""
-        for col, value in self.flatReq(reqObj, html=True).iteritems():
+        for col, value in self.flatReq(reqObj, html=True).items():
             tempReq[col] = value
             tempReq["reqifId"] = req
         return tempReq
