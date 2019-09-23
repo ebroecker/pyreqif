@@ -187,7 +187,8 @@ def dump(doc, f):
                         valuesDefinitionsXml = createSubElement(valueXml, "DEFINITION")
                     for val,lab in py2reqif(value.toDict()).iteritems():
                         if val == "contentRef" and lab is not None:
-                            createSubElement(valuesValuesXml, "ENUM-VALUE-REF",lab)
+                            for labelItem in lab:
+                                createSubElement(valuesValuesXml, "ENUM-VALUE-REF",labelItem)
                         elif val == "attributeRef":
                             if value.mytype == "enum":
                                 createSubElement(valuesDefinitionsXml, "ATTRIBUTE-DEFINITION-ENUMERATION-REF", lab)
