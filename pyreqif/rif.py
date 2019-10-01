@@ -560,7 +560,7 @@ def dump(doc, f):
                         valuesDefinitionsXml = createSubElement(valueXml, "DEFINITION")
                     for val,lab in py2reqif(value.toDict()).items():
                         if val == "contentRef" and lab is not None:
-                            createSubElement(valuesValuesXml, "ENUM-VALUE-REF",lab)
+                            createSubElement(valuesValuesXml, "ENUM-VALUE-REF",lab[0])
                         elif val == "attributeRef":
                             if value.mytype == "enum":
                                 createSubElement(valuesDefinitionsXml, "ATTRIBUTE-DEFINITION-ENUMERATION-REF", lab)
@@ -575,7 +575,7 @@ def dump(doc, f):
                             pass
                         elif val == "CONTENT":
                             if lab is not None:
-                                if "<" in lab:
+                                if '<' in str(lab):
                                     labtree = etree.parse(io.BytesIO(lab))
                                     labroot = labtree.getroot()
                                     for el in labroot.iter():
