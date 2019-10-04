@@ -306,7 +306,7 @@ class requirementTypeList(reqIfObject):
 
 
 
-class reqirementItem(reqIfObject):
+class requirementItem(reqIfObject):
     def __init__(self, **kwargs):
         kwargs = reqIfObject.setValues(self, **kwargs)
         self.reqItem_args = [
@@ -348,7 +348,7 @@ class reqirementItem(reqIfObject):
         return myDict
 
  
-class reqirement(reqIfObject):
+class requirement(reqIfObject):
     def __init__(self, **kwargs):
         self._values = []
         kwargs = reqIfObject.setValues(self, **kwargs)
@@ -359,7 +359,7 @@ class reqirement(reqIfObject):
             self._typeref = None
 #        for ident, value in kwargs["values"].iteritems():
         for ident, value in kwargs["values"].items():
-            self._values.append(reqirementItem(**value))
+            self._values.append(requirementItem(**value))
     
     @property 
     def values(self):
@@ -390,12 +390,12 @@ class reqirement(reqIfObject):
         return myDict
 
         
-class reqirementList(reqIfObject):
+class requirementList(reqIfObject):
     def __init__(self):
         self._list = []
 
     def add(self, myReqDict):
-        myReq = reqirement(**myReqDict)
+        myReq = requirement(**myReqDict)
         temp = self.byId(myReq._identifier)
         if temp is None:
             self._list.append(myReq)
@@ -533,7 +533,7 @@ class doc(reqIfObject):
         self._header = None
         self._datatypeList = datatypeList()
         self._requirementTypeList = requirementTypeList()
-        self._requirementList = reqirementList()
+        self._requirementList = requirementList()
         self._specificationList = specificationList()
         self._hierarchy = []
         self._specRelationTypeList = specRelationTypeList()
