@@ -2,7 +2,7 @@
 import io
 import os.path
 from lxml import etree
-import extractOleData
+import pyreqif.extractOleData
 import xlsxwriter
 
 
@@ -11,13 +11,13 @@ def workOnHierarch(asd, row=0, deepth = 0, cols=None, worksheet = None):
     files = []
     for col, value in asd.items():
         if value is not None:
-            if "<" in value and ">" in value:
+            if "<" in str(value) and ">" in str(value):
                 try:
                     tree = etree.parse(io.BytesIO(value))
                     root = tree.getroot()
                     for element in root.iter("object"):
                         rtfFilename = os.path.join(basepath, element.attrib["data"])
-                        files = extractOleData.extractOleData(rtfFilename)
+                        files = pyreqif.extractOleData.extractOleData(rtfFilename)
                         # name = element.attrib["name"]
 
                         if len(files) > 0:
@@ -31,7 +31,7 @@ def workOnHierarch(asd, row=0, deepth = 0, cols=None, worksheet = None):
                     pass
                     # print "ERROR with " + value
         if col in cols:
-            worksheet.write(row, cols.index(col), value)
+            worksheet.write(row, cols.index(col), str(value))
             worksheet.set_row(row, None, None, {'level': deepth})
         if len(files) > 0:
             worksheet.insert_image(row, cols.index(col), os.path.splitext(files[0])[0] + ".png")

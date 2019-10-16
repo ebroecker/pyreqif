@@ -31,7 +31,6 @@ def extractOleData(rtfFilename):
                 outfileData = obj.oledata
                 outfileName = os.path.splitext(rtfFilename)[0] + ".xls"
         else:
-            print "A"
             pass
         createdFiles.append(outfileName)
 

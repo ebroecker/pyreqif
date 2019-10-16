@@ -66,7 +66,7 @@ mapReqifAttributeValueReversed = dict(map(reversed, mapReqifAttributeValue.items
 mapReqifAttributeDefinitionReversed = dict(map(reversed, mapReqifAttributeDefinition.items()))
 mapReqifDatatypeDefinitionReversed = dict(map(reversed, mapReqifDatatypeDefinition.items()))
 
-def mapReqifAttributeValue2Py(elem):
+def mapReqifAttributeValue2Py(elem:str):
     if elem in mapReqifAttributeValue:
         return mapReqifAttributeValue[elem]
     else:
@@ -74,7 +74,7 @@ def mapReqifAttributeValue2Py(elem):
         print (elem)
     return mapReqifAttributeValue['default']
 
-def mapPy2ReqifAttributeValue(elem):
+def mapPy2ReqifAttributeValue(elem:str):
     if elem in mapReqifAttributeValueReversed:
         return mapReqifAttributeValueReversed[elem]
     else:
@@ -82,7 +82,7 @@ def mapPy2ReqifAttributeValue(elem):
         print (elem)
     return mapReqifAttributeValueReversed['default']
 
-def mapReqifAttributeDefinition2Py(elem):
+def mapReqifAttributeDefinition2Py(elem:str):
     if elem in mapReqifAttributeDefinition:
         return mapReqifAttributeDefinition[elem]
     else:
@@ -90,7 +90,7 @@ def mapReqifAttributeDefinition2Py(elem):
         print (elem)
     return mapReqifAttributeDefinition['default']
 
-def mapPy2ReqifAttributeDefinition(elem):
+def mapPy2ReqifAttributeDefinition(elem:str):
     if elem in mapReqifAttributeDefinitionReversed:
         return mapReqifAttributeDefinitionReversed[elem]
     else:
@@ -98,7 +98,7 @@ def mapPy2ReqifAttributeDefinition(elem):
         print (elem)
     return mapReqifAttributeDefinitionReversed['default']
 
-def mapReqifDatatypeDefinition2Py(elem):
+def mapReqifDatatypeDefinition2Py(elem:str):
     if elem in mapReqifDatatypeDefinition:
         return mapReqifDatatypeDefinition[elem]
     else:
@@ -106,7 +106,7 @@ def mapReqifDatatypeDefinition2Py(elem):
         print (elem)
     return mapReqifDatatypeDefinition['default']
 
-def mapPy2ReqifDatatypeDefinition(elem):
+def mapPy2ReqifDatatypeDefinition(elem:str):
     if elem in mapReqifDatatypeDefinitionReversed:
         return mapReqifDatatypeDefinitionReversed[elem]
     else:
