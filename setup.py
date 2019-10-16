@@ -40,11 +40,7 @@ setup(
     long_description = "\n".join(doclines[2:]),
     license = "BSD",
     platforms = ["any"],
-    install_requires = ["future"],
-    extras_require = {
-        "reqif": ["lxml"],
-        "xlsx": ["xlsxwriter"],
-    },
+    install_requires = ["future", "oletools", "lxml", "xlsxwriter"],
 
     packages = find_packages(),
     scripts=['reqif2html.py', 'reqif2xlsx.py']
