@@ -10,28 +10,31 @@ import xlsxwriter
 def workOnHierarch(asd, row=0, deepth = 0, cols=None, worksheet = None):
     files = []
     for col, value in asd.items():
-        if value is not None:
-            if "<" in str(value) and ">" in str(value):
-                try:
-                    tree = etree.parse(io.BytesIO(value))
-                    root = tree.getroot()
-                    for element in root.iter("object"):
-                        rtfFilename = os.path.join(basepath, element.attrib["data"])
-                        files = pyreqif.extractOleData.extractOleData(rtfFilename)
-                        # name = element.attrib["name"]
-
-                        if len(files) > 0:
-                            for key in element.attrib:
-                                del element.attrib[key]
-                            element.tag = "a"
-                            element.set("href", files[0])
-                            element.text = "linked file: " + files[0]
-                    value = "".join(root.itertext())
-                except:
-                    pass
-                    # print "ERROR with " + value
         if col in cols:
-            worksheet.write(row, cols.index(col), str(value))
+            if type(value) is not bytes:
+                value = value.encode("utf8")
+            if value is not None:
+                if b"<" in value and b">" in value:
+                    try:
+                        tree = etree.parse(io.BytesIO(value))
+                        root = tree.getroot()
+                        for element in root.iter("object"):
+                            rtfFilename = os.path.join(basepath, element.attrib["data"])
+                            files = pyreqif.extractOleData.extractOleData(rtfFilename)
+                            # name = element.attrib["name"]
+
+                            if len(files) > 0:
+                                for key in element.attrib:
+                                    del element.attrib[key]
+                                element.tag = "a"
+                                element.set("href", files[0])
+                                element.text = "linked file: " + files[0]
+                        value = "".join(root.itertext())
+                        value = value.encode("utf8")
+                    except:
+                        pass
+                        # print "ERROR with " + value
+            worksheet.write(row, cols.index(col), value.decode("utf8"))
             worksheet.set_row(row, None, None, {'level': deepth})
         if len(files) > 0:
             worksheet.insert_image(row, cols.index(col), os.path.splitext(files[0])[0] + ".png")
