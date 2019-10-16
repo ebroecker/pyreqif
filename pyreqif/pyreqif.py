@@ -691,3 +691,9 @@ class doc(reqIfObject):
             retDict[child._objectref] = self.req2dict(child._objectref, cols)
             retDict[child._objectref]["children"] = self._hierarchDict(child, cols)
         return retDict
+
+    def hierach_iterator(self, element, cols, depth=0):
+        for child in element.children:
+            yield [self.req2dict(child._objectref, cols), depth]
+            for child in self.hierach_iterator(child, cols, depth+1):
+                yield child
