@@ -3,7 +3,7 @@ import io
 import os.path
 from lxml import etree
 import pyreqif.extractOleData
-import openpyxl
+#import openpyxl
 #from openpyxl.drawing.image import Image
 import xlsxwriter
 
@@ -24,9 +24,9 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath):
                     for element in root.iter("object"):
                         rtfFilename = os.path.join(basepath, element.attrib["data"])
                         if rtfFilename.endswith(".ole"):
-                            files = pyreqif.extractOleData.extractOleData(rtfFilename)
+                            files += pyreqif.extractOleData.extractOleData(rtfFilename)
                         else:
-                            files = [rtfFilename]
+                            files += [rtfFilename]
                         if len(files) > 0 and files[0][-3:].lower() not in ["png","jpeg","jpg","bmp","wmf","emf"]:
                             for key in element.attrib:
                                 del element.attrib[key]
@@ -41,8 +41,9 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath):
 #        worksheet.row_dimensions[row].outlineLevel = depth
         worksheet.write(row, cols.index(col), value.decode("utf-8"))
         worksheet.set_row(row, None, None, {'level': depth})
-        if len(files) > 0 and files[0][-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
-            worksheet.insert_image(row, cols.index(col), files[0])
+        for file in files:
+            if file[-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
+                worksheet.insert_image(row, cols.index(col), file)
 
 
 def dump(myDoc, outfile, basepath = None):
