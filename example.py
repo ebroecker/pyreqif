@@ -5,34 +5,38 @@ import pyreqif.reqif
 import pyreqif.rif
 import sys
 
-
-
-def workOnHierarch(asd, deepth = 0):
-    for i in range(0, deepth):
-        print ("  ", end="")
-    print (asd["ReqIF.ChapterName"], end="")
-    print (asd["ReqIF.Text"])
-    if "attachments" in asd:
-        for attachment in asd["attachments"]:
-            absPath = os.path.abspath(attachment)
-            print (absPath)
-    for id,child in asd["children"].items():
-        workOnHierarch(child, deepth+1)
-
-
+#
+# command line parsing
+#
 if len(sys.argv) < 2:
     print("Usage {} some_reqif_file.reqif\n".format(sys.argv[0]))
     print("prints Text and Chapter Information and also exports a RIF file")
     sys.exit()
 
 filename = sys.argv[1]
+
+#
+# calculate base path of reqif-document for extracting attachments
+#
 basepath = os.path.dirname(filename)
+
+
+#
+# load reqif/rif file
+#
 myDoc = pyreqif.reqif.load(filename)
+
+
+#
+#  example rif export:
+#
 f = open(os.path.splitext(filename)[0] + "_pyreqif_export.xml", "wb")
 pyreqif.rif.dump(myDoc,f)
 
-
-print ("Specification Requirements:")
+#
+# example ascii console 'flat' dump, without hierarchie
+#
+print ("Specification Requirements (flat):")
 specs = myDoc.asDict()
 for spec in specs:
   for req in spec:
@@ -40,7 +44,27 @@ for spec in specs:
       print (req["ReqIF.Text"])
 
 
+
+#
+# example ascii console 'hierarchy' dump, using hierach_iterator
+#
 print ("Specification Requirements (hierarchical):")
-hierarchSpec = myDoc.asHierarchDict()
-for id,topElement in hierarchSpec[0].items():
-    workOnHierarch(topElement)
+cols = myDoc.fields
+for spec in specs:
+    for child in myDoc.hierarchy:
+        for item, depth in  myDoc.hierach_iterator(child, cols):
+            #
+            # iterator gives every element and its hierachical depth
+            # do some ascii printing of Text and Chapter
+            print("  " * depth, end="")
+            print (item["ReqIF.ChapterName"], end="")
+            print (item["ReqIF.Text"])
+
+            #
+            # print some info, if attachement is found
+            #
+            if "attachments" in item:
+                for attachment in item["attachments"]:
+                    absPath = os.path.abspath(attachment)
+                    print (absPath)
+
