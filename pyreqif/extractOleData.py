@@ -9,22 +9,22 @@ def extractOleData(rtfFilename):
     rtfp = rtfobj.RtfObjParser(rtfData)
     rtfp.parse()
     for obj in rtfp.objects:
-        if 'Acro' in obj.class_name: # PDF
+        if b'Acro' in obj.class_name: # PDF
             outfileName = os.path.splitext(rtfFilename)[0] + ".pdf"
-            outfileData = obj.oledata[obj.oledata.find("%PDF-1."):]
+            outfileData = obj.oledata[obj.oledata.find(b"%PDF-1."):]
 
-        elif 'Package' == obj.class_name:
+        elif b'Package' == obj.class_name:
             outfileName = os.path.join(os.path.dirname(rtfFilename), obj.filename)
             outfileData = obj.olepkgdata
-        elif 'Word' in obj.class_name:
+        elif b'Word' in obj.class_name:
 #            if "PK\03\04" in obj.oledata:
 #                outfileData = obj.oledata[obj.oledata.find("PK\03\04"):]
 #                outfileName = os.path.splitext(rtfFilename)[0] + ".docx"
 #            else:
             outfileName = os.path.splitext(rtfFilename)[0] + ".doc"
             outfileData = obj.oledata
-        elif 'Excel' in obj.class_name:
-            if "PK\03\04" in obj.oledata:
+        elif b'Excel' in obj.class_name:
+            if b"PK\03\04" in obj.oledata:
                 outfileData = obj.oledata[obj.oledata.find("PK\03\04"):]
                 outfileName = os.path.splitext(rtfFilename)[0] + ".xlsx"
             else:

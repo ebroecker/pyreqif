@@ -3,6 +3,8 @@ import io
 import os.path
 from lxml import etree
 import pyreqif.extractOleData
+import openpyxl
+#from openpyxl.drawing.image import Image
 import xlsxwriter
 
 def write_excel_line(worksheet, item, row, cols, depth, basepath):
@@ -32,6 +34,8 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath):
                     value = value.encode("utf8")
                 except:
                     pass
+#        worksheet.cell(row=row, column=cols.index(col)+1). value=value.decode("utf-8")
+#        worksheet.row_dimensions[row].outlineLevel = depth
         worksheet.write(row, cols.index(col), value.decode("utf-8"))
         worksheet.set_row(row, None, None, {'level': depth})
         if len(files) > 0:
@@ -41,20 +45,27 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath):
 def dump(myDoc, outfile, basepath = None):
     if basepath is None:
         basepath = os.path.dirname(outfile)
+    #workbook = openpyxl.Workbook()
+    #worksheet = workbook.active
+    #workbook.title = "Export"
     workbook = xlsxwriter.Workbook(outfile)
-
     worksheet = workbook.add_worksheet("Export")
 
     cols = myDoc.fields
     colNr = 0
+#    colNr = 1
     for col in cols:
         worksheet.write(0, colNr, col)
+#        worksheet.cell(row=1, column=colNr).value = col
         colNr += 1
     cols = myDoc.fields
+
     row = 0
+#    row = 1
 
     for child in myDoc.hierarchy:
         for item, depth in  myDoc.hierach_iterator(child, cols):
             row += 1
             write_excel_line(worksheet, item, row, cols, depth, basepath)
+#    workbook.save(filename=outfile)
     workbook.close()
