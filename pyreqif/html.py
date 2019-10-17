@@ -3,7 +3,7 @@
 
 import io
 import os.path
-#import ole2rtf
+import pyreqif.ole2rtf
 from lxml import etree
 import sys
 #reload(sys)
@@ -37,7 +37,7 @@ def dump(myDoc, outfile, basepath = None):
                             root = tree.getroot()
                             for element in root.iter("object"):
                                 rtfFilename = os.path.join(basepath, element.attrib["data"])
-                                files = ole2rtf.ole2rtf(rtfFilename)
+                                files = pyreqif.ole2rtf.ole2rtf(rtfFilename)
                                 if rtfFilename.endswith("ole"):
                                     if len(files) > 0:
                                         if "name" in element.attrib:

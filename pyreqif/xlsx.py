@@ -49,6 +49,7 @@ def dump(myDoc, outfile, basepath = None):
                         except:
                             pass
                 worksheet.write(row, cols.index(col), value.decode("utf-8"))
+                worksheet.set_row(row, None, None, {'level': depth})
                 if len(files) > 0:
                     worksheet.insert_image(row, cols.index(col), os.path.splitext(files[0])[0] + ".png")
 
