@@ -8,9 +8,10 @@ import openpyxl
 import xlsxwriter
 
 def write_excel_line(worksheet, item, row, cols, depth, basepath):
-    files = []
+
 
     for col, value in item.items():
+        files = []
         if col not in cols:
             continue
         if type(value) is not bytes:
@@ -22,9 +23,11 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath):
                     root = tree.getroot()
                     for element in root.iter("object"):
                         rtfFilename = os.path.join(basepath, element.attrib["data"])
-                        files = pyreqif.extractOleData.extractOleData(rtfFilename)
-
-                        if len(files) > 0:
+                        if rtfFilename.endswith(".ole"):
+                            files = pyreqif.extractOleData.extractOleData(rtfFilename)
+                        else:
+                            files = [rtfFilename]
+                        if len(files) > 0 and files[0][-3:].lower() not in ["png","jpeg","jpg","bmp","wmf","emf"]:
                             for key in element.attrib:
                                 del element.attrib[key]
                             element.tag = "a"
@@ -38,8 +41,8 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath):
 #        worksheet.row_dimensions[row].outlineLevel = depth
         worksheet.write(row, cols.index(col), value.decode("utf-8"))
         worksheet.set_row(row, None, None, {'level': depth})
-        if len(files) > 0:
-            worksheet.insert_image(row, cols.index(col), os.path.splitext(files[0])[0] + ".png")
+        if len(files) > 0 and files[0][-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
+            worksheet.insert_image(row, cols.index(col), files[0])
 
 
 def dump(myDoc, outfile, basepath = None):
