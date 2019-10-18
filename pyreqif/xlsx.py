@@ -3,12 +3,13 @@ import io
 import os.path
 from lxml import etree
 import pyreqif.extractOleData
-import openpyxl
+#import openpyxl
 #from openpyxl.drawing.image import Image
 import xlsxwriter
+from PIL import Image
 
-def write_excel_line(worksheet, item, row, cols, depth, basepath):
-
+def write_excel_line(worksheet, item, row, cols, depth, basepath, format):
+    max_height = 0
 
     for col, value in item.items():
         files = []
@@ -24,9 +25,9 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath):
                     for element in root.iter("object"):
                         rtfFilename = os.path.join(basepath, element.attrib["data"])
                         if rtfFilename.endswith(".ole"):
-                            files = pyreqif.extractOleData.extractOleData(rtfFilename)
+                            files += pyreqif.extractOleData.extractOleData(rtfFilename)
                         else:
-                            files = [rtfFilename]
+                            files += [rtfFilename]
                         if len(files) > 0 and files[0][-3:].lower() not in ["png","jpeg","jpg","bmp","wmf","emf"]:
                             for key in element.attrib:
                                 del element.attrib[key]
@@ -40,10 +41,18 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath):
 #        worksheet.cell(row=row, column=cols.index(col)+1). value=value.decode("utf-8")
 #        worksheet.row_dimensions[row].outlineLevel = depth
         worksheet.write(row, cols.index(col), value.decode("utf-8"))
-        worksheet.set_row(row, None, None, {'level': depth})
-        if len(files) > 0 and files[0][-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
-            worksheet.insert_image(row, cols.index(col), files[0])
+        for file in files:
+            if file[-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
+                im = Image.open(file)
+                im.close()
+                _, height = im.size
+                max_height = max(height, max_height)
+                worksheet.set_row(row, max_height, None, {'level': depth})
 
+            if file[-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
+                worksheet.insert_image(row, cols.index(col), file)
+    if max_height == 0:
+        worksheet.set_row(row, None, format, {'level': depth})
 
 def dump(myDoc, outfile, basepath = None):
     if basepath is None:
@@ -54,6 +63,9 @@ def dump(myDoc, outfile, basepath = None):
     workbook = xlsxwriter.Workbook(outfile)
     worksheet = workbook.add_worksheet("Export")
 
+    cell_format = workbook.add_format()
+    cell_format.set_text_wrap()
+
     cols = myDoc.fields
     colNr = 0
 #    colNr = 1
@@ -61,14 +73,15 @@ def dump(myDoc, outfile, basepath = None):
         worksheet.write(0, colNr, col)
 #        worksheet.cell(row=1, column=colNr).value = col
         colNr += 1
-    cols = myDoc.fields
-
+    worksheet.set_column(0, colNr, 20)
+    if "ReqIF.Text" in cols:
+        worksheet.set_column(cols.index("ReqIF.Text"), cols.index("ReqIF.Text"), 100)
     row = 0
 #    row = 1
 
     for child in myDoc.hierarchy:
         for item, depth in  myDoc.hierach_iterator(child, cols):
             row += 1
-            write_excel_line(worksheet, item, row, cols, depth, basepath)
+            write_excel_line(worksheet, item, row, cols, depth, basepath, cell_format)
 #    workbook.save(filename=outfile)
     workbook.close()
