@@ -73,8 +73,9 @@ def dump(myDoc, outfile, basepath = None):
         worksheet.write(0, colNr, col)
 #        worksheet.cell(row=1, column=colNr).value = col
         colNr += 1
-    cols = myDoc.fields
-
+    worksheet.set_column(0, colNr, 20)
+    if "ReqIF.Text" in cols:
+        worksheet.set_column(cols.index("ReqIF.Text"), cols.index("ReqIF.Text"), 100)
     row = 0
 #    row = 1
 
