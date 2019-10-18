@@ -9,6 +9,8 @@ import xlsxwriter
 from PIL import Image
 
 def write_excel_line(worksheet, item, row, cols, depth, basepath, format):
+    max_height = 0
+
     for col, value in item.items():
         files = []
         if col not in cols:
@@ -38,18 +40,19 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath, format):
                     pass
 #        worksheet.cell(row=row, column=cols.index(col)+1). value=value.decode("utf-8")
 #        worksheet.row_dimensions[row].outlineLevel = depth
-        worksheet.write(row, cols.index(col), value.decode("utf-8"), format)
-        worksheet.set_row(row, None, None, {'level': depth})
-        last_height = 0
+        worksheet.write(row, cols.index(col), value.decode("utf-8"))
         for file in files:
             if file[-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
-                worksheet.insert_image(row, cols.index(col), file)
                 im = Image.open(file)
                 im.close()
                 _, height = im.size
-                worksheet.set_row(row, max(height, last_height))
-                last_height = max(height, last_height)
+                max_height = max(height, max_height)
+                worksheet.set_row(row, max_height, None, {'level': depth})
 
+            if file[-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
+                worksheet.insert_image(row, cols.index(col), file)
+    if max_height == 0:
+        worksheet.set_row(row, None, format, {'level': depth})
 
 def dump(myDoc, outfile, basepath = None):
     if basepath is None:
