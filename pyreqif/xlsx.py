@@ -43,11 +43,14 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath, format):
         worksheet.write(row, cols.index(col), value.decode("utf-8"))
         for file in files:
             if file[-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
-                im = Image.open(file)
-                im.close()
-                _, height = im.size
-                max_height = max(height, max_height)
-                worksheet.set_row(row, max_height, None, {'level': depth})
+                try:
+                    im = Image.open(file)
+                    im.close()
+                    _, height = im.size
+                    max_height = max(height, max_height)
+                    worksheet.set_row(row, max_height, None, {'level': depth})
+                except:
+                    print("Error with image: {}".format(file))
 
             if file[-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
                 worksheet.insert_image(row, cols.index(col), file)
