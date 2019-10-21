@@ -7,6 +7,7 @@ import pyreqif.extractOleData
 #from openpyxl.drawing.image import Image
 import xlsxwriter
 from PIL import Image
+import urllib
 
 def write_excel_line(worksheet, item, row, cols, depth, basepath, format):
     max_height = 0
@@ -24,6 +25,7 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath, format):
                     root = tree.getroot()
                     for element in root.iter("object"):
                         rtfFilename = os.path.join(basepath, element.attrib["data"])
+                        rtfFilename = urllib.parse.unquote(rtfFilename)
                         if rtfFilename.endswith(".ole"):
                             files += pyreqif.extractOleData.extractOleData(rtfFilename)
                         else:
@@ -45,17 +47,20 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath, format):
             if file[-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
                 try:
                     im = Image.open(file)
-                    im.close()
                     _, height = im.size
                     max_height = max(height, max_height)
-                    worksheet.set_row(row, max_height, None, {'level': depth})
+                    im.close()
                 except:
                     print("Error with image: {}".format(file))
+                    max_height = max(300, max_height)
 
             if file[-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
                 worksheet.insert_image(row, cols.index(col), file)
     if max_height == 0:
         worksheet.set_row(row, None, format, {'level': depth})
+    else:
+        worksheet.set_row(row, max_height, None, {'level': depth})
+
 
 def dump(myDoc, outfile, basepath = None):
     if basepath is None:
