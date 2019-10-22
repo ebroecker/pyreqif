@@ -26,7 +26,10 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath, format):
                     root = tree.getroot()
                     for element in root.iter("object"):
                         rtfFilename = os.path.join(basepath, element.attrib["data"])
-                        rtfFilename = urllib.parse.unquote(rtfFilename)
+                        try:
+                            rtfFilename = urllib.parse.unquote(rtfFilename)
+                        except:
+                            pass
                         if rtfFilename.endswith(".ole"):
                             files += pyreqif.extractOleData.extractOleData(rtfFilename)
                         else:
