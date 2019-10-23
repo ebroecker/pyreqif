@@ -7,11 +7,13 @@ import pyreqif.extractOleData
 #from openpyxl.drawing.image import Image
 import xlsxwriter
 from PIL import Image
+import urllib
 
 def write_excel_line(worksheet, item, row, cols, depth, basepath, format):
-    max_height = 0
+    row_height = 0
 
     for col, value in item.items():
+        col_height = 0
         files = []
         if col not in cols:
             continue
@@ -24,6 +26,10 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath, format):
                     root = tree.getroot()
                     for element in root.iter("object"):
                         rtfFilename = os.path.join(basepath, element.attrib["data"])
+                        try:
+                            rtfFilename = urllib.parse.unquote(rtfFilename)
+                        except:
+                            pass
                         if rtfFilename.endswith(".ole"):
                             files += pyreqif.extractOleData.extractOleData(rtfFilename)
                         else:
@@ -43,16 +49,23 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath, format):
         worksheet.write(row, cols.index(col), value.decode("utf-8"))
         for file in files:
             if file[-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
-                im = Image.open(file)
-                im.close()
-                _, height = im.size
-                max_height = max(height, max_height)
-                worksheet.set_row(row, max_height, None, {'level': depth})
+                try:
+                    im = Image.open(file)
+                    _, height = im.size
+                    col_height += height
+                    im.close()
+                except:
+                    print("Error with image: {}".format(file))
+                    col_height = max(300, row_height)
 
             if file[-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
-                worksheet.insert_image(row, cols.index(col), file)
-    if max_height == 0:
+                worksheet.insert_image(row, cols.index(col), file, {'y_offset' : col_height-height})
+        row_height = max(row_height, col_height)
+    if row_height == 0:
         worksheet.set_row(row, None, format, {'level': depth})
+    else:
+        worksheet.set_row(row, row_height, None, {'level': depth})
+
 
 def dump(myDoc, outfile, basepath = None):
     if basepath is None:
