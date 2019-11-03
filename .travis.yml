@@ -18,4 +18,4 @@ deploy:
 
 script:
   - python setup.py install
-  - ./createReqDoc.py
+  - python ./createReqDoc.py
