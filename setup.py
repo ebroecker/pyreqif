@@ -44,7 +44,8 @@ setup(
     platforms = ["any"],
     install_requires = ["future", "oletools", "lxml", "xlsxwriter"],
 
-    packages = find_packages(),
+    packages = find_packages("src"),
+    package_dir = {"": "src"},
     scripts=['reqif2html.py', 'reqif2xlsx.py']
 )
 
