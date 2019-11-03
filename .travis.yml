@@ -17,5 +17,5 @@ deploy:
     skip_existing: true
 
 script:
-  python setup.py install
-  ./createReqDoc.py
+  - python setup.py install
+  - ./createReqDoc.py
