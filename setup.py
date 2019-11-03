@@ -25,12 +25,14 @@ Topic :: Scientific/Engineering
 
 import sys
 from setuptools import setup, find_packages
+import versioneer
 
 doclines = __doc__.split("\n")
 
 setup(
     name = "pyreqif",
-    version = 0.2,
+    version = versioneer.get_version(),
+    cmdclass = versioneer.get_cmdclass(),
     maintainer = "Eduard Broecker",
     maintainer_email = "eduard@gmx.de",
     url = "http://github.com/ebroecker/pyreqif",
