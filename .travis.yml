@@ -1,0 +1,21 @@
+language: python
+
+matrix:
+  include:
+    - python: 3.5
+    - python: 3.6
+    - python: 3.7
+    - python: 3.7
+
+
+deploy:
+  provider: pypi
+  user: ebroecker
+  on:
+    tags: true
+    branch: py3 
+    skip_existing: true
+
+script:
+  - python setup.py install
+  - python ./createReqDoc.py
