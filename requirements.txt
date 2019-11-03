@@ -1,0 +1,4 @@
+lxml
+future
+oletools
+xlsxwriter
