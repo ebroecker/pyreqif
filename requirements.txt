@@ -3,3 +3,4 @@ future
 oletools
 openpyxl
 xlsxwriter
+image
