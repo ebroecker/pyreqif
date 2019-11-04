@@ -79,7 +79,7 @@ def dump(myDoc, outfile, basepath = None):
     cell_format = workbook.add_format()
     cell_format.set_text_wrap()
 
-    cols = myDoc.fields
+    cols = myDoc.fields + ["reqifId"]
     colNr = 0
 #    colNr = 1
     for col in cols:

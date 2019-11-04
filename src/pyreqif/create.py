@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import datetime
-import pyreqif
-import rif
+import pyreqif.pyreqif
+import pyreqif.rif
 import uuid
 
 def createDocument(id, title="title", comment="created by pyreqif"):
-    mydoc = pyreqif.doc()
+    mydoc = pyreqif.pyreqif.doc()
     mydoc.addHeader({"identifier":id,"sourceToolId":"pyreqif", "comment": comment, "title":title, "creationTime": str(datetime.date.today())})
     return mydoc
 
@@ -49,10 +49,10 @@ def creatUUID(itemId = None):
 def createHierarchHead(longName, id=None, lastChange=datetime.datetime.today().isoformat()):
     if id is None:
         id = creatUUID()
-    return pyreqif.hierarchy(**rif.reqif2py({"identifier": id, "longName": longName, "lastChange": lastChange}))
+    return pyreqif.pyreqif.hierarchy(**pyreqif.rif.reqif2py({"identifier": id, "longName": longName, "lastChange": lastChange}))
 
 def createHierarchElement(reqid, id=None, lastChange=datetime.datetime.today().isoformat()):
     if id is None:
         id = creatUUID()
-    return pyreqif.hierarchy(**rif.reqif2py({"identifier": id, "lastChange": lastChange, "objectRef": reqid}))
+    return pyreqif.pyreqif.hierarchy(**pyreqif.rif.reqif2py({"identifier": id, "lastChange": lastChange, "objectRef": reqid}))
 
