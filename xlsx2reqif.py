@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import zipfile
 import xml.etree.ElementTree
@@ -11,7 +11,12 @@ import sys
 def get_images_from_excel(excel_file, output_file):
     out_zip = zipfile.ZipFile(document_title + ".reqifz", 'w', zipfile.ZIP_DEFLATED)
 
+
     in_excel = zipfile.ZipFile(excel_file)
+
+    if "xl/drawings/drawing1.xml" not in in_excel.namelist():
+        return []
+
     ns = "{http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing}"
     a_ns = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 

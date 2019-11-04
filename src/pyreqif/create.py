@@ -42,9 +42,9 @@ def addRelation(sourceId, targetId, mydoc, id, type, longName=None, lastChange=d
 
 def creatUUID(itemId = None):
     if itemId is not None:
-        return str(uuid.uuid1(int(itemId)))
+        return "_" + str(uuid.uuid1(int(itemId)))
     else:
-        return str(uuid.uuid1())
+        return "_" + str(uuid.uuid1())
 
 def createHierarchHead(longName, id=None, lastChange=datetime.datetime.today().isoformat()):
     if id is None:

@@ -13,4 +13,4 @@ deploy:
 
 script:
   - python setup.py install
-  - python ./createReqDoc.py
+  - ./test.sh

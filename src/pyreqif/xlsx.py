@@ -93,7 +93,7 @@ def dump(myDoc, outfile, basepath = None):
 #    row = 1
 
     for child in myDoc.hierarchy:
-        for item, depth in  myDoc.hierach_iterator(child, cols):
+        for item, depth in myDoc.hierach_iterator(child, cols):
             row += 1
             write_excel_line(worksheet, item, row, cols, depth, basepath, cell_format)
 #    workbook.save(filename=outfile)
