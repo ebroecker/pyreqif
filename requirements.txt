@@ -2,3 +2,5 @@ lxml
 future
 oletools
 openpyxl
+xlsxwriter
+PIL
