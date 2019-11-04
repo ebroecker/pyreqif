@@ -12,5 +12,4 @@ deploy:
     skip_existing: true
 
 script:
-  - python setup.py install
-  - python ./createReqDoc.py
+  - ./test.sh

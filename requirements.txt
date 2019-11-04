@@ -1,4 +1,4 @@
 lxml
 future
 oletools
-xlsxwriter
+openpyxl

@@ -40,9 +40,9 @@ print ("Specification Requirements (flat):")
 specs = myDoc.asDict()
 for spec in specs:
   for req in spec:
-      print (req["ReqIF.ChapterName"], end="")
-      print (req["ReqIF.Text"])
-
+      for key,value in req.items():
+          print ("{} : {}".format(key, value), end=" ")
+      print("")
 
 
 #
@@ -57,8 +57,11 @@ for spec in specs:
             # iterator gives every element and its hierachical depth
             # do some ascii printing of Text and Chapter
             print("  " * depth, end="")
-            print (item["ReqIF.ChapterName"], end="")
-            print (item["ReqIF.Text"])
+            for key, value in req.items():
+                print("{} : {}".format(key, value), end=" ")
+            print("")
+#            print (item["ReqIF.ChapterName"], end="")
+#            print (item["ReqIF.Text"])
 
             #
             # print some info, if attachement is found

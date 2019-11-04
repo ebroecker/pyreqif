@@ -589,7 +589,7 @@ def dump(doc, f):
             elif value == "typeRef":
                 typeXml = createSubElement(specXml, "TYPE")
                 createSubElement(typeXml, "SPEC-OBJECT-TYPE-REF", label)
-            elif element not in attributesForElements:
+            elif value not in attributesForElements:
                 createSubElement(specXml , value , label)
             
 
