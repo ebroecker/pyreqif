@@ -1,6 +1,6 @@
 # pyreqif
 
-## simple python representation of RIF (Exerpt/HIS/...) Objects in Python ##
+## simple python representation of RIF/REQIF (Exerpt/HIS/...) Objects in Python ##
 
 
 currently some basic support to convert: 
@@ -8,6 +8,8 @@ currently some basic support to convert:
   converts given rif/reqif-File to html-File
 * reqif2xlsx.py
   converts given rif/reqif-File to xlsx-File (Excel)
+* xlsx2reqif.py
+  converts given xlsx-File (Excel) to rif/reqif-File
 * example.py
   use for own implementations (e.g. for import reqif-objects in own system)
 
