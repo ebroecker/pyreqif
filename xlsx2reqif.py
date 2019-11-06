@@ -112,6 +112,9 @@ for row_nr in range(2,ws.max_row):
     for col in columns:
         # do images:
         pictures = get_images(images, row_nr, columns.index(col))
+        if type(xls_req[col]) == str:
+            xls_req[col] = xls_req[col].replace("<", "&gt;")
+            xls_req[col].replace("<", "&lt;")
         if len(pictures) > 0:
             for pic in pictures:
                 xls_req[col] = "" if xls_req[col] is None else xls_req[col]
