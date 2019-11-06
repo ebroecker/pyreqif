@@ -130,10 +130,8 @@ for row_nr in range(2,ws.max_row):
         hierarch_stack.append(last_hierarch_element)
     elif level < len(hierarch_stack):
         hierarch_stack = hierarch_stack[0:level]
-    else:
-        hierarch_stack[level-1] = hierarch_element
 
-    current_head = hierarch_stack[level - 2]
+    current_head = hierarch_stack[level - 1]
     current_head.addChild(hierarch_element)
     last_hierarch_element = hierarch_element
 
