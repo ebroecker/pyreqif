@@ -36,7 +36,6 @@ def get_images_from_excel(excel_file, output_file):
 
         images.append({"row": int(row), "col": int(col), "img_ref" : img_ref})
     drawing_source.close()
-
     drawing_links_source = in_excel.open("xl/drawings/_rels/drawing1.xml.rels")
     drawing_links_tree = xml.etree.ElementTree.parse(drawing_links_source)
     drawing_links_root = drawing_links_tree.getroot()
@@ -120,7 +119,7 @@ for row_nr in range(2,ws.max_row):
                 xls_req[col] = "" if xls_req[col] is None else xls_req[col]
                 xls_req[col] += "<img src={}>".format(pic["target"])
         if xls_req[col] is not None:
-            pyreqif.create.addReq(xls_req["reqifId"],"_some_requirement_type_id", "<div>" + xls_req[col] + "</div>", "reqtype_for_" + col, mydoc)
+            pyreqif.create.addReq(xls_req["reqifId"],"_some_requirement_type_id", "<div>" + str(xls_req[col]) + "</div>", "reqtype_for_" + col, mydoc)
 
 
 
