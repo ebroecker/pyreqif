@@ -1,5 +1,7 @@
 # pyreqif
 
+[![Build Status](https://travis-ci.org/ebroecker/pyreqif.svg?branch=py3)](https://travis-ci.org/ebroecker/pyreqif)
+
 ## simple python representation of RIF/REQIF (Exerpt/HIS/...) Objects in Python ##
 
 
