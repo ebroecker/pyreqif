@@ -36,7 +36,6 @@ def get_images_from_excel(excel_file, output_file):
 
         images.append({"row": int(row), "col": int(col), "img_ref" : img_ref})
     drawing_source.close()
-
     drawing_links_source = in_excel.open("xl/drawings/_rels/drawing1.xml.rels")
     drawing_links_tree = xml.etree.ElementTree.parse(drawing_links_source)
     drawing_links_root = drawing_links_tree.getroot()
@@ -107,15 +106,20 @@ hierarch_stack = []
 last_hierarch_element = myHierarch
 for row_nr in range(2,ws.max_row):
     xls_req = dict(zip(columns, [ws.cell(row_nr,x).value for x in range(1,ws.max_column+1)]))
+    if not "reqifId" in xls_req:
+        xls_req["reqifId"] = pyreqif.create.creatUUID()
     for col in columns:
         # do images:
-        pictures = get_images(images, row_nr, columns.index(col))
+        pictures = get_images(images, row_nr-1, columns.index(col))
+        if type(xls_req[col]) == str:
+            xls_req[col] = xls_req[col].replace("<", "&gt;")
+            xls_req[col].replace("<", "&lt;")
         if len(pictures) > 0:
             for pic in pictures:
                 xls_req[col] = "" if xls_req[col] is None else xls_req[col]
                 xls_req[col] += "<img src={}>".format(pic["target"])
         if xls_req[col] is not None:
-            pyreqif.create.addReq(xls_req["reqifId"],"_some_requirement_type_id", "<div>" + xls_req[col] + "</div>", "reqtype_for_" + col, mydoc)
+            pyreqif.create.addReq(xls_req["reqifId"],"_some_requirement_type_id", "<div>" + str(xls_req[col]) + "</div>", "reqtype_for_" + col, mydoc)
 
 
 
@@ -126,10 +130,8 @@ for row_nr in range(2,ws.max_row):
         hierarch_stack.append(last_hierarch_element)
     elif level < len(hierarch_stack):
         hierarch_stack = hierarch_stack[0:level]
-    else:
-        hierarch_stack[level-1] = hierarch_element
 
-    current_head = hierarch_stack[level - 2]
+    current_head = hierarch_stack[level - 1]
     current_head.addChild(hierarch_element)
     last_hierarch_element = hierarch_element
 
