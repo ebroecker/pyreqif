@@ -7,7 +7,7 @@ import uuid
 
 def createDocument(id, title="title", comment="created by pyreqif"):
     mydoc = pyreqif.pyreqif.doc()
-    mydoc.addHeader({"identifier":id,"sourceToolId":"pyreqif", "comment": comment, "title":title, "creationTime": str(datetime.date.today())})
+    mydoc.addHeader({"identifier":id,"sourceToolId":"pyreqif", "comment": comment, "title":title, "creationTime":  datetime.datetime.now().isoformat()})
     return mydoc
 
 def addDatatype(id, mydoc, type="document", lastChange=datetime.datetime.today().isoformat(), longName="xhtml", values = None):
