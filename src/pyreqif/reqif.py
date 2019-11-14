@@ -181,7 +181,17 @@ def dump(doc, f):
     for relationType in doc.specRelationTypeList:
         createSubElement(specTypes, "SPEC-RELATION-TYPE", attributes=py2reqif(relationType.toDict()))
 
-    for :
+    #TODO
+    # <SPECIFICATION-TYPE IDENTIFIER="_jgCytgfNEeeAO8RifBaE-g" LAST-CHANGE="2017-03-13T10:15:09.017+01:00" LONG-NAME="Specification Type">
+    #      <SPEC-ATTRIBUTES>
+    #        <ATTRIBUTE-DEFINITION-STRING IDENTIFIER="_jgCytwfNEeeAO8RifBaE-g" LAST-CHANGE="2017-03-13T10:15:09.017+01:00" LONG-NAME="Description">
+    #          <TYPE>
+    #           <DATATYPE-DEFINITION-STRING-REF>_jgCyswfNEeeAO8RifBaE-g</DATATYPE-DEFINITION-STRING-REF>
+    #        </TYPE>
+    #        </ATTRIBUTE-DEFINITION-STRING>
+    #      </SPEC-ATTRIBUTES>
+    #    </SPECIFICATION-TYPE>
+
 
     #RELATION-GROUP-TYPE
     for relationGroup in doc.specRelationGroupList:
@@ -295,16 +305,6 @@ def dump(doc, f):
                 createSubElement(typeXml, "SPEC-OBJECT-TYPE-REF", label)
             elif value not in attributesForElements:
                 createSubElement(specXml , value , label)
-    #TODO
-    # <SPECIFICATION-TYPE IDENTIFIER="_jgCytgfNEeeAO8RifBaE-g" LAST-CHANGE="2017-03-13T10:15:09.017+01:00" LONG-NAME="Specification Type">
-    #      <SPEC-ATTRIBUTES>
-    #        <ATTRIBUTE-DEFINITION-STRING IDENTIFIER="_jgCytwfNEeeAO8RifBaE-g" LAST-CHANGE="2017-03-13T10:15:09.017+01:00" LONG-NAME="Description">
-    #          <TYPE>
-    #           <DATATYPE-DEFINITION-STRING-REF>_jgCyswfNEeeAO8RifBaE-g</DATATYPE-DEFINITION-STRING-REF>
-    #        </TYPE>
-    #        </ATTRIBUTE-DEFINITION-STRING>
-    #      </SPEC-ATTRIBUTES>
-    #    </SPECIFICATION-TYPE>
 
     #
     # SPEC-RELATIONS
