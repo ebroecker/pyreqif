@@ -181,6 +181,9 @@ def dump(doc, f):
     for relationType in doc.specRelationTypeList:
         createSubElement(specTypes, "SPEC-RELATION-TYPE", attributes=py2reqif(relationType.toDict()))
 
+    for specificationType in doc.specificationTypes:
+        print(py2reqif(specificationType))
+        createSubElement(specTypes, "SPECIFICATION-TYPE", attributes=py2reqif(specificationType))
     #TODO
     # <SPECIFICATION-TYPE IDENTIFIER="_jgCytgfNEeeAO8RifBaE-g" LAST-CHANGE="2017-03-13T10:15:09.017+01:00" LONG-NAME="Specification Type">
     #      <SPEC-ATTRIBUTES>
@@ -366,10 +369,6 @@ def dump(doc, f):
     #SPEC-HIERARCHY-ROOT
     for hierarch in doc.hierarchy:
         specHierarchRootXml = createSubElement(specHierarchRootsXml, "SPECIFICATION", attributes=py2reqif(hierarch.toDict()))
-#TODO
-#        < TYPE >
-#        < SPECIFICATION - TYPE - REF > _jgCytgfNEeeAO8RifBaE - g < / SPECIFICATION - TYPE - REF >
-#    < / TYPE >
     #        for value,label in py2reqif(hierarch.toDict()).iteritems():
         for value, label in py2reqif(hierarch.toDict()).items():
             if value == "typeRef":

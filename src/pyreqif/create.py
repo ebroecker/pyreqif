@@ -10,6 +10,9 @@ def createDocument(id, title="title", comment="created by pyreqif"):
     mydoc.addHeader({"identifier":id,"sourceToolId":"pyreqif", "comment": comment, "title":title, "creationTime":  datetime.datetime.now().isoformat()})
     return mydoc
 
+def addDocType(id, mydoc, lastChange=datetime.datetime.today().isoformat(), longName = "doc_type"):
+    mydoc.specificationTypes.add({"identifier": id, "lastChange": lastChange, "longName": longName})
+
 def addDatatype(id, mydoc, type="document", lastChange=datetime.datetime.today().isoformat(), longName="xhtml", values = None):
     if values is None:
         mydoc.addDatatype({"identifier":id, "type":type, "lastChange": lastChange, "longName":longName})
@@ -46,10 +49,10 @@ def creatUUID(itemId = None):
     else:
         return "_" + str(uuid.uuid1())
 
-def createHierarchHead(longName, id=None, lastChange=datetime.datetime.today().isoformat()):
+def createHierarchHead(longName, typeRef, id=None, lastChange=datetime.datetime.today().isoformat()):
     if id is None:
         id = creatUUID()
-    return pyreqif.pyreqif.hierarchy(**pyreqif.rif.reqif2py({"identifier": id, "longName": longName, "lastChange": lastChange}))
+    return pyreqif.pyreqif.hierarchy(**pyreqif.rif.reqif2py({"identifier": id, "longName": longName, "typeRef": typeRef, "lastChange": lastChange}))
 
 def createHierarchElement(reqid, id=None, lastChange=datetime.datetime.today().isoformat()):
     if id is None:

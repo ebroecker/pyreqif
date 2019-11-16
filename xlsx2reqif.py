@@ -77,13 +77,13 @@ for col_nr in range(1, ws.max_column+1):
 
 document_reqif_id = "_{}ReqifId-Header".format(document_title)
 spec_reqif_id = "_{}ReqifId--spec".format(document_title)
+doc_type_ref = "_doc_type_ref"
 
 #
 # create doc:
 #
 mydoc = pyreqif.create.createDocument(document_reqif_id, title=document_title)
-
-#
+pyreqif.create.addDocType(doc_type_ref, mydoc)
 # create primitive datatype
 #
 pyreqif.create.addDatatype("_datatype_ID", mydoc)
@@ -97,7 +97,7 @@ for col in columns:
 #
 # create document hierarchy head
 #
-myHierarch = pyreqif.create.createHierarchHead(document_title, id=spec_reqif_id)
+myHierarch = pyreqif.create.createHierarchHead(document_title, typeRef=doc_type_ref, id=spec_reqif_id)
 
 #
 # create child elements
