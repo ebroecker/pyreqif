@@ -176,9 +176,25 @@ def dump(doc, f):
                             createSubElement(typeXml,"DATATYPE-DEFINITION-STRING-REF",label)
                         elif value not in attributesForElements and value not in notUsedAttributes:
                             createSubElement(enumXml,value,label)
+
     #SPEC-RELATION-TYPE
     for relationType in doc.specRelationTypeList:
         createSubElement(specTypes, "SPEC-RELATION-TYPE", attributes=py2reqif(relationType.toDict()))
+
+    for specificationType in doc.specificationTypes:
+        print(py2reqif(specificationType))
+        createSubElement(specTypes, "SPECIFICATION-TYPE", attributes=py2reqif(specificationType))
+    #TODO
+    # <SPECIFICATION-TYPE IDENTIFIER="_jgCytgfNEeeAO8RifBaE-g" LAST-CHANGE="2017-03-13T10:15:09.017+01:00" LONG-NAME="Specification Type">
+    #      <SPEC-ATTRIBUTES>
+    #        <ATTRIBUTE-DEFINITION-STRING IDENTIFIER="_jgCytwfNEeeAO8RifBaE-g" LAST-CHANGE="2017-03-13T10:15:09.017+01:00" LONG-NAME="Description">
+    #          <TYPE>
+    #           <DATATYPE-DEFINITION-STRING-REF>_jgCyswfNEeeAO8RifBaE-g</DATATYPE-DEFINITION-STRING-REF>
+    #        </TYPE>
+    #        </ATTRIBUTE-DEFINITION-STRING>
+    #      </SPEC-ATTRIBUTES>
+    #    </SPECIFICATION-TYPE>
+
 
     #RELATION-GROUP-TYPE
     for relationGroup in doc.specRelationGroupList:
@@ -292,7 +308,6 @@ def dump(doc, f):
                 createSubElement(typeXml, "SPEC-OBJECT-TYPE-REF", label)
             elif value not in attributesForElements:
                 createSubElement(specXml , value , label)
-            
 
     #
     # SPEC-RELATIONS
@@ -354,7 +369,7 @@ def dump(doc, f):
     #SPEC-HIERARCHY-ROOT
     for hierarch in doc.hierarchy:
         specHierarchRootXml = createSubElement(specHierarchRootsXml, "SPECIFICATION", attributes=py2reqif(hierarch.toDict()))
-#        for value,label in py2reqif(hierarch.toDict()).iteritems():
+    #        for value,label in py2reqif(hierarch.toDict()).iteritems():
         for value, label in py2reqif(hierarch.toDict()).items():
             if value == "typeRef":
                 typeXml = createSubElement(specHierarchRootXml, "TYPE")

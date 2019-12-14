@@ -77,13 +77,13 @@ for col_nr in range(1, ws.max_column+1):
 
 document_reqif_id = "_{}ReqifId-Header".format(document_title)
 spec_reqif_id = "_{}ReqifId--spec".format(document_title)
+doc_type_ref = "_doc_type_ref"
 
 #
 # create doc:
 #
 mydoc = pyreqif.create.createDocument(document_reqif_id, title=document_title)
-
-#
+pyreqif.create.addDocType(doc_type_ref, mydoc)
 # create primitive datatype
 #
 pyreqif.create.addDatatype("_datatype_ID", mydoc)
@@ -92,12 +92,12 @@ pyreqif.create.addDatatype("_datatype_ID", mydoc)
 # create columns
 #
 for col in columns:
-    pyreqif.create.addReqType("_some_requirement_type_id", "requirement Type", "reqtype_for_" + col, col, "_datatype_ID", mydoc)
+    pyreqif.create.addReqType("_some_requirement_type_id", "requirement Type", "_reqtype_for_" + col.replace(" ", "_"), col, "_datatype_ID", mydoc)
 
 #
 # create document hierarchy head
 #
-myHierarch = pyreqif.create.createHierarchHead(document_title, id=spec_reqif_id)
+myHierarch = pyreqif.create.createHierarchHead(document_title, typeRef=doc_type_ref, id=spec_reqif_id)
 
 #
 # create child elements
@@ -119,7 +119,7 @@ for row_nr in range(2,ws.max_row):
                 xls_req[col] = "" if xls_req[col] is None else xls_req[col]
                 xls_req[col] += "<img src={}>".format(pic["target"])
         if xls_req[col] is not None:
-            pyreqif.create.addReq(xls_req["reqifId"],"_some_requirement_type_id", "<div>" + str(xls_req[col]) + "</div>", "reqtype_for_" + col, mydoc)
+            pyreqif.create.addReq(xls_req["reqifId"],"_some_requirement_type_id", "<div>" + str(xls_req[col]) + "</div>", "_reqtype_for_" + col.replace(" ","_"), mydoc)
 
 
 

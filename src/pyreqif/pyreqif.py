@@ -521,12 +521,18 @@ class relationList(reqIfObject):
         self._list = []
     def add(self, relation):
         self._list.append(relation)
-        
     def __iter__(self):
         return iter(self._list)
 
 
-    
+class specificationTypes(reqIfObject):
+    def __init__(self):
+        self._list = []
+    def add(self, relation):
+        self._list.append(relation)
+    def __iter__(self):
+        return iter(self._list)
+
     
 class doc(reqIfObject):
     def __init__(self):
@@ -539,7 +545,8 @@ class doc(reqIfObject):
         self._specRelationTypeList = specRelationTypeList()
         self._specRelationGroupList = specRelationGroupList()
         self._relations = relationList()
-    
+        self.specificationTypes = specificationTypes()
+
     @property 
     def header(self):
         return self._header.toDict()
