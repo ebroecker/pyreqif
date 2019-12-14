@@ -12,9 +12,10 @@ collumn1typeId = "_4"
 collumn2typeId = "_5"
 
 document_id = "_1"
+doc_type_ref = "_doc_type_ref"
 
 mydoc = pyreqif.create.createDocument(document_id)
-
+pyreqif.create.addDocType(doc_type_ref, mydoc)
 pyreqif.create.addDatatype(xhtmlDatatypeId,mydoc)
 
 
@@ -32,7 +33,7 @@ link_type = document_id + "link_type"
 pyreqif.create.addRelation("_6","_7", mydoc, id="_self_link", type=link_type)
 pyreqif.create.addSpecRelationType(link_type, mydoc, longName="selflink")
 
-myHierarch = pyreqif.create.createHierarchHead("Reqirement Document Name")
+myHierarch = pyreqif.create.createHierarchHead("Reqirement Document Name", typeRef=doc_type_ref)
 myHierarch.addChild(pyreqif.create.createHierarchElement("_6"))
 myHierarch.addChild(pyreqif.create.createHierarchElement("_7"))
 
