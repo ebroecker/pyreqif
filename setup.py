@@ -46,6 +46,6 @@ setup(
 
     packages = find_packages("src"),
     package_dir = {"": "src"},
-    scripts=['reqif2html.py', 'reqif2xlsx.py']
+    scripts=['reqif2html.py', 'reqif2xlsx.py', 'xlsx2reqif.py']
 )
 
