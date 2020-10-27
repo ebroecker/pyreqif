@@ -13,11 +13,11 @@ def createDocument(id, title="title", comment="created by pyreqif"):
 def addDocType(id, mydoc, lastChange=datetime.datetime.today().isoformat(), longName = "doc_type"):
     mydoc.specificationTypes.add({"identifier": id, "lastChange": lastChange, "longName": longName})
 
-def addDatatype(id, mydoc, type="document", lastChange=datetime.datetime.today().isoformat(), longName="xhtml", values = None):
+def addDatatype(id, mydoc, type="document", lastChange=datetime.datetime.today().isoformat(), longName="xhtml", values = None, multiValued=False):
     if values is None:
         mydoc.addDatatype({"identifier":id, "type":type, "lastChange": lastChange, "longName":longName})
     else:
-        mydoc.addDatatype({"identifier":id, "type":type, "lastChange": lastChange, "longName":longName, "values" : values})
+        mydoc.addDatatype({"identifier":id, "type":type, "lastChange": lastChange, "longName":longName, "values" : values, "multiValued" : multiValued})
 
 
 def addSpecRelationType(id, mydoc, longName, lastChange=datetime.datetime.today().isoformat()):
