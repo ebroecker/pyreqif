@@ -6,8 +6,10 @@ import os.path
 import pyreqif.ole2rtf
 from lxml import etree
 import sys
-#reload(sys)
-#sys.setdefaultencoding('utf8')
+
+
+# reload(sys)
+# sys.setdefaultencoding('utf8')
 
 def create_html(item, cols, depth, basepath):
     tempReq = {}
@@ -62,7 +64,7 @@ def create_html(item, cols, depth, basepath):
     return htmlOutput
 
 
-def dump(myDoc, outfile, basepath = None):
+def dump(myDoc, outfile, basepath=None):
     if basepath is None:
         basepath = os.path.dirname(outfile)
 
@@ -80,9 +82,9 @@ def dump(myDoc, outfile, basepath = None):
         for child in myDoc.hierarchy:
             for item, depth in myDoc.hierach_iterator(child, cols):
                 htmlOutput += create_html(item, cols, depth, basepath)
-#        for req in specification:
-#            reqObj = myDoc.getReqById(req)
-#            htmlOutput += create_html(myDoc.flatReq(reqObj, html=True), cols, 0, basepath)
+        #        for req in specification:
+        #            reqObj = myDoc.getReqById(req)
+        #            htmlOutput += create_html(myDoc.flatReq(reqObj, html=True), cols, 0, basepath)
         htmlOutput += "</table>"
     fp = open(outfile, "wb")
     fp.write(bytes(htmlOutput, "utf8"))

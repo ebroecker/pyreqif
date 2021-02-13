@@ -5,7 +5,6 @@ from lxml import etree
 import collections
 
 
-
 class reqIfObject(object):
     def __init__(self):
         self._identifier = None
@@ -25,18 +24,17 @@ class reqIfObject(object):
                 value = default
             else:
                 kwargs.pop(arg_name)
-#            if value is not None:
+            #            if value is not None:
             setattr(self, destination, value)
         return kwargs
-        
+
     def toDict(self):
         myDict = {}
         for arg_name, attrib, function, default in self._reqIfObjargs:
             myDict[arg_name] = getattr(self, attrib)
         return myDict
-            
-        
-        
+
+
 class header(reqIfObject):
     def __init__(self, **kwargs):
         self._args = [
@@ -48,7 +46,6 @@ class header(reqIfObject):
             ('version', '_version', str, None),
             ('comment', '_comment', str, None),
         ]
-
 
         for arg_name, destination, function, default in self._args:
             try:
@@ -62,20 +59,20 @@ class header(reqIfObject):
             setattr(self, destination, value)
 
         kwargs = reqIfObject.setValues(self, **kwargs)
-            
+
         if len(kwargs) > 0:
             raise TypeError('{}() got unexpected argument{} {}'.format(
                 self.__class__.__name__,
                 's' if len(kwargs) > 1 else '',
                 ', '.join(kwargs.keys())
             ))
-        
+
     def toDict(self):
         myDict = reqIfObject.toDict(self)
         for arg_name, attrib, function, default in self._args:
             myDict[arg_name] = getattr(self, attrib)
         return myDict
-         
+
 
 class datatype(reqIfObject):
     def __init__(self, **kwargs):
@@ -83,7 +80,6 @@ class datatype(reqIfObject):
             ('type', '_type', str, None),
             ('embedded', '_embedded', str, None),
         ]
-
 
         for arg_name, destination, function, default in self.datatypeArgs:
             try:
@@ -97,11 +93,11 @@ class datatype(reqIfObject):
             setattr(self, destination, value)
 
         kwargs = reqIfObject.setValues(self, **kwargs)
-            
+
         if "values" in kwargs:
             self._isValueTable = True
             self._valueTable = {}
-#            for valId, value in kwargs["values"].iteritems():
+            #            for valId, value in kwargs["values"].iteritems():
             for valId, value in kwargs["values"].items():
                 self._valueTable[valId] = value
             kwargs.pop("values")
@@ -112,28 +108,29 @@ class datatype(reqIfObject):
                 's' if len(kwargs) > 1 else '',
                 ', '.join(kwargs.keys())
             ))
-        
+
     @property
     def mytype(self):
         return self._type
-    
+
     @property
     def valueTable(self):
         return self._valueTable
-    
+
     def toDict(self):
         myDict = reqIfObject.toDict(self)
         for arg_name, attrib, function, default in self.datatypeArgs:
             myDict[arg_name] = getattr(self, attrib)
         return myDict
-        
+
+
 class datatypeList(reqIfObject):
     def __init__(self):
         self._list = []
-        
+
     def add(self, myDatatypeDict):
         self._list.append(datatype(**myDatatypeDict))
-    
+
     def byId(self, datatypeId):
         for dt in self._list:
             if datatypeId == dt._identifier:
@@ -149,7 +146,7 @@ class reqTypeRefs(reqIfObject):
         kwargs = reqIfObject.setValues(self, **kwargs)
         if "typeRef" in kwargs:
             self._typeref = kwargs["typeRef"]
-            kwargs.pop("typeRef")            
+            kwargs.pop("typeRef")
         else:
             self._typeref = None
 
@@ -159,21 +156,21 @@ class reqTypeRefs(reqIfObject):
         else:
             self._defaultValue = None
 
-
         if "type" in kwargs:
             self._type = kwargs["type"]
-            kwargs.pop("type")            
+            kwargs.pop("type")
         else:
             self._typeref = None
-            
+
     def toDict(self):
         myDict = reqIfObject.toDict(self)
         if self._typeref is not None:
             myDict["typeRef"] = self._typeref
         if self._type is not None:
             myDict["type"] = self._type
-            
+
         return myDict
+
 
 class specRelationGroup(reqIfObject):
     def __init__(self, **kwargs):
@@ -190,9 +187,11 @@ class specRelationGroup(reqIfObject):
         self.nameOfType = kwargs["longNameOfType"]
         self.specRelationRefs = kwargs["specRelationRefs"]
 
+
 class specRelationGroupList(reqIfObject):
     def __init__(self):
         self._list = []
+
     def add(self, myReqTypeDict):
         reqType = specRelationGroup(**myReqTypeDict)
         temp = self.byId(reqType._identifier)
@@ -210,6 +209,7 @@ class specRelationGroupList(reqIfObject):
     def __iter__(self):
         return iter(self._list)
 
+
 class specRelationType(reqIfObject):
     def __init__(self, **kwargs):
         kwargs = reqIfObject.setValues(self, **kwargs)
@@ -218,6 +218,7 @@ class specRelationType(reqIfObject):
             kwargs.pop("desc")
         else:
             self._desc = None
+
 
 class specRelationTypeList(reqIfObject):
     def __init__(self):
@@ -240,6 +241,7 @@ class specRelationTypeList(reqIfObject):
     def __iter__(self):
         return iter(self._list)
 
+
 class requirementType(reqIfObject):
     def __init__(self, **kwargs):
         self._myTypes = {}
@@ -252,7 +254,6 @@ class requirementType(reqIfObject):
         for myType in kwargs:
             self._myTypes[myType] = reqTypeRefs(**kwargs[myType])
 
-
     @property
     def myTypes(self):
         return self._myTypes
@@ -260,7 +261,7 @@ class requirementType(reqIfObject):
     @property
     def fields(self):
         fields = []
-#        for type,typeObj in self._myTypes.iteritems():
+        #        for type,typeObj in self._myTypes.iteritems():
         for type, typeObj in self._myTypes.items():
             fields.append(typeObj._longname)
         return fields
@@ -276,10 +277,11 @@ class requirementType(reqIfObject):
             myDict["desc"] = self._desc
         return myDict
 
+
 class requirementTypeList(reqIfObject):
     def __init__(self):
         self._list = []
-        
+
     def add(self, myReqTypeDict):
         reqType = requirementType(**myReqTypeDict)
         temp = self.byId(reqType._identifier)
@@ -305,7 +307,6 @@ class requirementTypeList(reqIfObject):
         return iter(self._list)
 
 
-
 class requirementItem(reqIfObject):
     def __init__(self, **kwargs):
         kwargs = reqIfObject.setValues(self, **kwargs)
@@ -313,9 +314,8 @@ class requirementItem(reqIfObject):
             ('contentRef', '_contentref', None, None),
             ('content', '_content', None, None),
             ('attributeRef', '_attributeref', str, None),
-            ('type', '_type', str, None),            
+            ('type', '_type', str, None),
         ]
-
 
         for arg_name, destination, function, default in self.reqItem_args:
             try:
@@ -327,27 +327,27 @@ class requirementItem(reqIfObject):
             if function is not None and value is not None:
                 value = function(value)
             setattr(self, destination, value)
-            
+
         if len(kwargs) > 0:
             raise TypeError('{}() got unexpected argument{} {}'.format(
                 self.__class__.__name__,
                 's' if len(kwargs) > 1 else '',
                 ', '.join(kwargs.keys())
             ))
-    
+
     @property
     def mytype(self):
         return self._type
-    
+
     def toDict(self):
         myDict = reqIfObject.toDict(self)
-        
+
         for arg_name, attrib, function, default in self.reqItem_args:
             myDict[arg_name] = getattr(self, attrib)
 
         return myDict
 
- 
+
 class requirement(reqIfObject):
     def __init__(self, **kwargs):
         self._values = []
@@ -357,11 +357,11 @@ class requirement(reqIfObject):
             kwargs.pop("typeRef")
         else:
             self._typeref = None
-#        for ident, value in kwargs["values"].iteritems():
+        #        for ident, value in kwargs["values"].iteritems():
         for ident, value in kwargs["values"].items():
             self._values.append(requirementItem(**value))
-    
-    @property 
+
+    @property
     def values(self):
         return self._values
 
@@ -370,8 +370,9 @@ class requirement(reqIfObject):
         textValues = []
         for value in self._values:
             newVal = value
-#            print value._content
-            if value._contentref is None and value._content is not None and len(value._content) > 0 and value._content[0] == "<":
+            #            print value._content
+            if value._contentref is None and value._content is not None and len(value._content) > 0 and value._content[
+                0] == "<":
                 try:
                     tree = etree.parse(io.BytesIO(value._content))
                     root = tree.getroot()
@@ -389,7 +390,7 @@ class requirement(reqIfObject):
         myDict["values"] = self._values
         return myDict
 
-        
+
 class requirementList(reqIfObject):
     def __init__(self):
         self._list = []
@@ -410,7 +411,8 @@ class requirementList(reqIfObject):
 
     def __iter__(self):
         return iter(self._list)
-    
+
+
 class specification(reqIfObject):
     def __init__(self, **mySpecDict):
         mySpecDict = reqIfObject.setValues(self, **mySpecDict)
@@ -426,33 +428,41 @@ class specification(reqIfObject):
                 's' if len(mySpecDict) > 1 else '',
                 ', '.join(mySpecDict.keys())
             ))
+
     def __iter__(self):
         return iter(self._list)
+
     @property
     def name(self):
         return self._longname
+
     @property
     def desc(self):
         return self._desc
-    
+
     def toDict(self):
         myDict = reqIfObject.toDict(self)
         if self._desc is not None:
             myDict["desc"] = self._desc
         return myDict
-        
+
     def addReq(self, reqId):
         self._list.append(reqId)
+
 
 class specificationList(reqIfObject):
     def __init__(self):
         self._list = []
+
     def add(self, mySpec):
         self._list.append(mySpec)
+
     def __iter__(self):
         return iter(self._list)
+
     def __len__(self):
         return len(self._list)
+
 
 class hierarchy(reqIfObject):
     def __init__(self, **kwargs):
@@ -469,11 +479,11 @@ class hierarchy(reqIfObject):
             self._objectref = None
 
         self._children = []
-        
+
     @property
     def children(self):
         return self._children
-    
+
     def toDict(self):
         myDict = reqIfObject.toDict(self)
         if self._typeref is not None:
@@ -482,9 +492,9 @@ class hierarchy(reqIfObject):
             myDict["objectRef"] = self._objectref
         return myDict
 
-    def addChild(self, child):        
+    def addChild(self, child):
         self._children.append(child)
-    
+
 
 class relation(reqIfObject):
     def __init__(self, **kwargs):
@@ -493,9 +503,8 @@ class relation(reqIfObject):
             ('typeRef', '_typeref', str, None),
             ('desc', '_desc', None, None),
             ('sourceRef', '_sourceref', str, None),
-            ('targetRef', '_targetref', str, None),            
+            ('targetRef', '_targetref', str, None),
         ]
-
 
         for arg_name, destination, function, default in args:
             try:
@@ -507,20 +516,22 @@ class relation(reqIfObject):
             if function is not None and value is not None:
                 value = function(value)
             setattr(self, destination, value)
-            
+
         if len(kwargs) > 0:
             raise TypeError('{}() got unexpected argument{} {}'.format(
                 self.__class__.__name__,
                 's' if len(kwargs) > 1 else '',
                 ', '.join(kwargs.keys())
             ))
-        
+
 
 class relationList(reqIfObject):
     def __init__(self):
         self._list = []
+
     def add(self, relation):
         self._list.append(relation)
+
     def __iter__(self):
         return iter(self._list)
 
@@ -528,12 +539,14 @@ class relationList(reqIfObject):
 class specificationTypes(reqIfObject):
     def __init__(self):
         self._list = []
+
     def add(self, relation):
         self._list.append(relation)
+
     def __iter__(self):
         return iter(self._list)
 
-    
+
 class doc(reqIfObject):
     def __init__(self):
         self._header = None
@@ -547,30 +560,30 @@ class doc(reqIfObject):
         self._relations = relationList()
         self.specificationTypes = specificationTypes()
 
-    @property 
+    @property
     def header(self):
         return self._header.toDict()
 
-    @property 
+    @property
     def datatypeList(self):
         return self._datatypeList
 
-    @property 
+    @property
     def requirementTypeList(self):
-        return self._requirementTypeList 
-    
+        return self._requirementTypeList
+
     @property
     def requirementList(self):
         return self._requirementList
-    
+
     @property
     def relations(self):
         return self._relations
-    
+
     @property
     def hierarchy(self):
         return self._hierarchy
-    
+
     @property
     def specificationList(self):
         if len(self._specificationList) == 0:
@@ -600,7 +613,7 @@ class doc(reqIfObject):
 
     def addHeader(self, myHeader):
         self._header = header(**myHeader)
-        
+
     def addDatatype(self, myDatatypeDict):
         self._datatypeList.add(myDatatypeDict)
 
@@ -612,16 +625,16 @@ class doc(reqIfObject):
 
     def datatypeById(self, datatypeId):
         return self._datatypeList.byId(datatypeId)
-    
+
     def addRequirementType(self, myReqTypeDict):
         self._requirementTypeList.add(myReqTypeDict)
-        
+
     def addRequirement(self, myReqDict):
         self._requirementList.add(myReqDict)
-    
+
     def addSpecification(self, mySpec):
         self._specificationList.add(mySpec)
-    
+
     def getReqById(self, reqId):
         for req in self._requirementList._list:
             if req._identifier == reqId:
@@ -631,12 +644,12 @@ class doc(reqIfObject):
         for req in self._requirementList._list:
             if req._longname == reqLongName:
                 return req
-            
+
     def flatReq(self, requirement, **kwargs):
         reqDict = {}
         reqType = self.requirementTypeList.byId(requirement._typeref)
 
-#        for myTypeId,myType in reqType.myTypes.iteritems():
+        #        for myTypeId,myType in reqType.myTypes.iteritems():
         for myTypeId, myType in reqType.myTypes.items():
             if myType._defaultValue is not None:
                 dataType = self.datatypeById(myType._typeref)
@@ -658,7 +671,7 @@ class doc(reqIfObject):
             else:
                 reqDict[valueType._longname] = value._content
         return reqDict
-    
+
     def addRelation(self, relation):
         self._relations.add(relation)
 
@@ -702,5 +715,5 @@ class doc(reqIfObject):
     def hierach_iterator(self, element, cols, depth=0):
         for child in element.children:
             yield [self.req2dict(child._objectref, cols), depth]
-            for child in self.hierach_iterator(child, cols, depth+1):
+            for child in self.hierach_iterator(child, cols, depth + 1):
                 yield child

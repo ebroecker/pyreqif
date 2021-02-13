@@ -5,57 +5,77 @@ import pyreqif.pyreqif
 import pyreqif.rif
 import uuid
 
+
 def createDocument(id, title="title", comment="created by pyreqif"):
     mydoc = pyreqif.pyreqif.doc()
-    mydoc.addHeader({"identifier":id,"sourceToolId":"pyreqif", "comment": comment, "title":title, "creationTime":  datetime.datetime.now().isoformat()})
+    mydoc.addHeader({"identifier": id, "sourceToolId": "pyreqif", "comment": comment, "title": title,
+                     "creationTime": datetime.datetime.today().isoformat("T", "seconds")})
     return mydoc
 
-def addDocType(id, mydoc, lastChange=datetime.datetime.today().isoformat(), longName = "doc_type"):
+
+def addDocType(id, mydoc, lastChange=datetime.datetime.today().isoformat("T", "seconds"), longName="doc_type"):
     mydoc.specificationTypes.add({"identifier": id, "lastChange": lastChange, "longName": longName})
 
-def addDatatype(id, mydoc, type="document", lastChange=datetime.datetime.today().isoformat(), longName="xhtml", values = None):
+
+def addDatatype(id, mydoc, type="document", lastChange=datetime.datetime.today().isoformat("T", "seconds"),
+                longName="xhtml", values=None):
     if values is None:
-        mydoc.addDatatype({"identifier":id, "type":type, "lastChange": lastChange, "longName":longName})
+        mydoc.addDatatype({"identifier": id, "type": type, "lastChange": lastChange, "longName": longName})
     else:
-        mydoc.addDatatype({"identifier":id, "type":type, "lastChange": lastChange, "longName":longName, "values" : values})
+        mydoc.addDatatype(
+            {"identifier": id, "type": type, "lastChange": lastChange, "longName": longName, "values": values})
 
 
-def addSpecRelationType(id, mydoc, longName, lastChange=datetime.datetime.today().isoformat()):
-    mydoc.addSpecRelationType({"identifier":id, "longName" : longName, "lastChange": lastChange})
+def addSpecRelationType(id, mydoc, longName, lastChange=datetime.datetime.today().isoformat("T", "seconds")):
+    mydoc.addSpecRelationType({"identifier": id, "longName": longName, "lastChange": lastChange})
 
-def addSpecRelationGroup(mydoc, id, sourceDoc, targetDoc,  longName, longNameOfType, specRelationRefs, lastChange=datetime.datetime.today().isoformat()):
-    mydoc.addSpecRelationGroup({"identifier":id, "longName": longName, "sourceDoc" : sourceDoc,
+
+def addSpecRelationGroup(mydoc, id, sourceDoc, targetDoc, longName, longNameOfType, specRelationRefs,
+                         lastChange=datetime.datetime.today().isoformat("T", "seconds")):
+    mydoc.addSpecRelationGroup({"identifier": id, "longName": longName, "sourceDoc": sourceDoc,
                                 "targetDoc": targetDoc, "lastChange": lastChange,
-                                "longNameOfType": longNameOfType, "specRelationRefs" : specRelationRefs})
+                                "longNameOfType": longNameOfType, "specRelationRefs": specRelationRefs})
 
-def addReqType(specObjId, specObjLongName, specAttribId, collumName, typeRef, mydoc, type="complex", lastChange=datetime.datetime.today().isoformat()):
-    mydoc.addRequirementType({"identifier":specObjId,  "longName": specObjLongName, "lastChange": lastChange, specAttribId : {"identifier":specAttribId, "typeRef":typeRef,"type":type, "lastChange": lastChange, "longName": collumName}})
 
-def addReq(id, specType,  content, reqTypeRef, mydoc, lastChange=datetime.datetime.today().isoformat()):
-    mydoc.addRequirement({"typeRef" : specType, "identifier" : id, "lastChange": lastChange, "values" : {id : {"content" :content, "attributeRef":reqTypeRef, "type": "embeddedDoc"}}})
+def addReqType(specObjId, specObjLongName, specAttribId, collumName, typeRef, mydoc, type="complex",
+               lastChange=datetime.datetime.today().isoformat("T", "seconds")):
+    mydoc.addRequirementType({"identifier": specObjId, "longName": specObjLongName, "lastChange": lastChange,
+                              specAttribId: {"identifier": specAttribId, "typeRef": typeRef, "type": type,
+                                             "lastChange": lastChange, "longName": collumName}})
 
-def addRelation(sourceId, targetId, mydoc, id, type, longName=None, lastChange=datetime.datetime.today().isoformat()):
-    relation = {"identifier" : id, "lastChange": lastChange}
-    relation ["sourceRef"] = sourceId
+
+def addReq(id, specType, content, reqTypeRef, mydoc, lastChange=datetime.datetime.today().isoformat("T", "seconds")):
+    mydoc.addRequirement({"typeRef": specType, "identifier": id, "lastChange": lastChange,
+                          "values": {id: {"content": content, "attributeRef": reqTypeRef, "type": "embeddedDoc"}}})
+
+
+def addRelation(sourceId, targetId, mydoc, id, type, longName=None,
+                lastChange=datetime.datetime.today().isoformat("T", "seconds")):
+    relation = {"identifier": id, "lastChange": lastChange}
+    relation["sourceRef"] = sourceId
     relation["targetRef"] = targetId
     relation["typeRef"] = type
     if longName is not None:
         relation["longName"] = longName
     mydoc.addRelation(relation)
 
-def creatUUID(itemId = None):
+
+def creatUUID(itemId=None):
     if itemId is not None:
         return "_" + str(uuid.uuid1(int(itemId)))
     else:
         return "_" + str(uuid.uuid1())
 
-def createHierarchHead(longName, typeRef, id=None, lastChange=datetime.datetime.today().isoformat()):
+
+def createHierarchHead(longName, typeRef, id=None, lastChange=datetime.datetime.today().isoformat("T", "seconds")):
     if id is None:
         id = creatUUID()
-    return pyreqif.pyreqif.hierarchy(**pyreqif.rif.reqif2py({"identifier": id, "longName": longName, "typeRef": typeRef, "lastChange": lastChange}))
+    return pyreqif.pyreqif.hierarchy(
+        **pyreqif.rif.reqif2py({"identifier": id, "longName": longName, "typeRef": typeRef, "lastChange": lastChange}))
 
-def createHierarchElement(reqid, id=None, lastChange=datetime.datetime.today().isoformat()):
+
+def createHierarchElement(reqid, id=None, lastChange=datetime.datetime.today().isoformat("T", "seconds")):
     if id is None:
         id = creatUUID()
-    return pyreqif.pyreqif.hierarchy(**pyreqif.rif.reqif2py({"identifier": id, "lastChange": lastChange, "objectRef": reqid}))
-
+    return pyreqif.pyreqif.hierarchy(
+        **pyreqif.rif.reqif2py({"identifier": id, "lastChange": lastChange, "objectRef": reqid}))
