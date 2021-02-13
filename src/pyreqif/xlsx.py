@@ -54,12 +54,12 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath, format):
                     _, height = im.size
                     col_height += height
                     im.close()
+                    worksheet.insert_image(row, cols.index(col), file, {'y_offset' : col_height-height}
                 except:
                     print("Error with image: {}".format(file))
+                    worksheet.write_url(row, cols.index(col)+1, os.path.join(basepath,file), string="Link to picture")          
                     col_height = max(300, row_height)
 
-            if file[-3:].lower() in ["png", "jpeg", "jpg", "bmp", "wmf", "emf"]:
-                worksheet.insert_image(row, cols.index(col), file, {'y_offset' : col_height-height})
         row_height = max(row_height, col_height)
     if row_height == 0:
         worksheet.set_row(row, None, format, {'level': depth})
