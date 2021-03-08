@@ -187,8 +187,9 @@ def load(f):
 
     datatypesXmlElement = contentRoot.find('./' + ns + 'DATATYPES')
     for child in datatypesXmlElement:
-        if child.tag == ns + "DATATYPE-DEFINITION-DOCUMENT" or child.tag == ns + 'DATATYPE-DEFINITION-STRING' or child.tag == ns + 'DATATYPE-DEFINITION-XHTML' \
-                or child.tag == ns + 'DATATYPE-DEFINITION-BOOLEAN' or child.tag == ns + "DATATYPE-DEFINITION-INTEGER":
+            if child.tag == ns + "DATATYPE-DEFINITION-DOCUMENT" or child.tag == ns + 'DATATYPE-DEFINITION-STRING' or child.tag == ns + 'DATATYPE-DEFINITION-XHTML'\
+                    or child.tag == ns + 'DATATYPE-DEFINITION-BOOLEAN' or child.tag == ns + "DATATYPE-DEFINITION-INTEGER" or child.tag == ns + "DATATYPE-DEFINITION-DATE"\
+					or child.tag == ns + 'DATATYPE-DEFINITION-REAL':
             datatypeProto = getSubElementValuesByTitle(child, ['EMBEDDED'])
             tagWithoutNamespace = re.sub('{[\S]*}', '', child.tag)
             datatypeProto['type'] = mapReqifDatatypeDefinition2Py(tagWithoutNamespace)
@@ -225,8 +226,8 @@ def load(f):
             attributesXml = child.find('./' + ns + "SPEC-ATTRIBUTES")
             if attributesXml is not None:
                 for attribute in attributesXml:
-                    if attribute.tag == ns + "ATTRIBUTE-DEFINITION-COMPLEX" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-STRING" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-XHTML" \
-                            or attribute.tag == ns + "ATTRIBUTE-DEFINITION-BOOLEAN" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-INTEGER":
+                    if attribute.tag == ns +"ATTRIBUTE-DEFINITION-COMPLEX" or attribute.tag == ns +"ATTRIBUTE-DEFINITION-STRING" or attribute.tag == ns +"ATTRIBUTE-DEFINITION-XHTML"\
+                            or attribute.tag == ns + "ATTRIBUTE-DEFINITION-BOOLEAN" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-INTEGER" or attribute.tag == ns + "ATTRIBUTE-VALUE-DATE" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-DATE" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-REAL"::
                         specAttribType = getSubElementValuesByTitle(attribute)
                         tagWithoutNamespace = re.sub('{[\S]*}', '', attribute.tag)
                         specAttribType["type"] = mapReqifAttributeDefinition2Py(tagWithoutNamespace)
@@ -308,9 +309,10 @@ def load(f):
             values = {}
             for valueXml in valuesXml:
                 value = getSubElementValuesByTitle(valueXml)
-                # TODO : Support other types
-                if valueXml.tag == ns + 'ATTRIBUTE-VALUE-EMBEDDED-DOCUMENT' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-STRING' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-XHTML' \
-                        or valueXml.tag == ns + 'ATTRIBUTE-VALUE-BOOLEAN' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-INTEGER':
+                #TODO : Support other types
+                if valueXml.tag == ns + 'ATTRIBUTE-VALUE-EMBEDDED-DOCUMENT' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-STRING' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-XHTML'\
+                        or valueXml.tag == ns + 'ATTRIBUTE-VALUE-BOOLEAN' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-INTEGER' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-DATE'\
+						or valueXml.tag == ns + 'ATTRIBUTE-VALUE-REAL':
                     attributeRefXml = valueXml.find('./' + ns + 'DEFINITION').getchildren()[0]
                     value['attributeRef'] = attributeRefXml.text
                     if 'THE-VALUE' in valueXml.attrib:
