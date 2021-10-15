@@ -232,7 +232,7 @@ def load(f):
                 for attribute in attributesXml:
                     if attribute.tag == ns +"ATTRIBUTE-DEFINITION-COMPLEX" or attribute.tag == ns +"ATTRIBUTE-DEFINITION-STRING" or attribute.tag == ns +"ATTRIBUTE-DEFINITION-XHTML"\
                             or attribute.tag == ns + "ATTRIBUTE-DEFINITION-BOOLEAN" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-INTEGER"\
-		            or attribute.tag == ns + "ATTRIBUTE-VALUE-DATE" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-DATE"\ 
+		            or attribute.tag == ns + "ATTRIBUTE-VALUE-DATE" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-DATE"\
 		            or attribute.tag == ns + "ATTRIBUTE-DEFINITION-REAL" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-SIMPLE":
                         specAttribType = getSubElementValuesByTitle(attribute)
                         tagWithoutNamespace = re.sub('{[\S]*}', '', attribute.tag)
