@@ -67,7 +67,7 @@ mapReqifDatatypeDefinition = {"default": "document",
                               "DATATYPE-DEFINITION-STRING": "string",
                               "DATATYPE-DEFINITION-DATE": "string",
                               "DATATYPE-DEFINITION-SIMPLE": "document",
-			      "DATATYPE-DEFINITION-XHTML": "document",
+                              "DATATYPE-DEFINITION-XHTML": "document",
                               "DATATYPE-DEFINITION-BOOLEAN": "document",
                               "DATATYPE-DEFINITION-REAL": "document",
                               "DATATYPE-DEFINITION-INTEGER": "document"}
