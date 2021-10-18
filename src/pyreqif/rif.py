@@ -45,22 +45,31 @@ transLationTable = {"IDENTIFIER": "identifier",
 mapReqifAttributeValue = {"default": "embeddedDoc",
                           "ATTRIBUTE-VALUE-EMBEDDED-DOCUMENT": "embeddedDoc",
                           "ATTRIBUTE-VALUE-STRING": "string",
+                          "ATTRIBUTE-VALUE-DATE": "string",
+                          "ATTRIBUTE-VALUE-SIMPLE": "embeddedDoc",
                           "ATTRIBUTE-VALUE-XHTML": "embeddedDoc",
                           "ATTRIBUTE-VALUE-BOOLEAN": "embeddedDoc",
+                          "ATTRIBUTE-VALUE-REAL": "embeddedDoc",
                           "ATTRIBUTE-VALUE-INTEGER": "embeddedDoc"}
 
 mapReqifAttributeDefinition = {"default": "complex",
                                "ATTRIBUTE-DEFINITION-COMPLEX": "complex",
                                "ATTRIBUTE-DEFINITION-STRING": "string",
+                               "ATTRIBUTE-DEFINITION-DATE": "string",
+                               "ATTRIBUTE-DEFINITION-SIMPLE": "complex",
                                "ATTRIBUTE-DEFINITION-XHTML": "complex",
                                "ATTRIBUTE-DEFINITION-BOOLEAN": "complex",
+                               "ATTRIBUTE-DEFINITION-REAL": "complex",
                                "ATTRIBUTE-DEFINITION-INTEGER": "complex"}
 
 mapReqifDatatypeDefinition = {"default": "document",
                               "DATATYPE-DEFINITION-DOCUMENT": "document",
                               "DATATYPE-DEFINITION-STRING": "string",
+                              "DATATYPE-DEFINITION-DATE": "string",
+                              "DATATYPE-DEFINITION-SIMPLE": "document",
                               "DATATYPE-DEFINITION-XHTML": "document",
                               "DATATYPE-DEFINITION-BOOLEAN": "document",
+                              "DATATYPE-DEFINITION-REAL": "document",
                               "DATATYPE-DEFINITION-INTEGER": "document"}
 
 transLationTableReverse = dict(map(reversed, transLationTable.items()))
@@ -189,7 +198,7 @@ def load(f):
     for child in datatypesXmlElement:
         if child.tag == ns + "DATATYPE-DEFINITION-DOCUMENT" or child.tag == ns + 'DATATYPE-DEFINITION-STRING' or child.tag == ns + 'DATATYPE-DEFINITION-XHTML'\
                     or child.tag == ns + 'DATATYPE-DEFINITION-BOOLEAN' or child.tag == ns + "DATATYPE-DEFINITION-INTEGER" or child.tag == ns + "DATATYPE-DEFINITION-DATE"\
-					or child.tag == ns + 'DATATYPE-DEFINITION-REAL':
+					or child.tag == ns + 'DATATYPE-DEFINITION-REAL' or child.tag == ns + 'DATATYPE-DEFINITION-SIMPLE':
             datatypeProto = getSubElementValuesByTitle(child, ['EMBEDDED'])
             tagWithoutNamespace = re.sub('{[\S]*}', '', child.tag)
             datatypeProto['type'] = mapReqifDatatypeDefinition2Py(tagWithoutNamespace)
@@ -210,11 +219,6 @@ def load(f):
             datatypeProto['values'] = values
             doc.addDatatype(reqif2py(datatypeProto))
         else:
-            # missing:
-            # DATATYPE-DEFINITION-BOOLEAN
-            # DATATYPE-DEFINITION-DATE
-            # DATATYPE-DEFINITION-INTEGER
-            # DATATYPE-DEFINITION-REAL
             print("Not supported datatype: ", )
             print(child.tag)
 
@@ -227,7 +231,9 @@ def load(f):
             if attributesXml is not None:
                 for attribute in attributesXml:
                     if attribute.tag == ns +"ATTRIBUTE-DEFINITION-COMPLEX" or attribute.tag == ns +"ATTRIBUTE-DEFINITION-STRING" or attribute.tag == ns +"ATTRIBUTE-DEFINITION-XHTML"\
-                            or attribute.tag == ns + "ATTRIBUTE-DEFINITION-BOOLEAN" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-INTEGER" or attribute.tag == ns + "ATTRIBUTE-VALUE-DATE" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-DATE" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-REAL":
+                            or attribute.tag == ns + "ATTRIBUTE-DEFINITION-BOOLEAN" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-INTEGER"\
+                            or attribute.tag == ns + "ATTRIBUTE-VALUE-DATE" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-DATE"\
+                            or attribute.tag == ns + "ATTRIBUTE-DEFINITION-REAL" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-SIMPLE":
                         specAttribType = getSubElementValuesByTitle(attribute)
                         tagWithoutNamespace = re.sub('{[\S]*}', '', attribute.tag)
                         specAttribType["type"] = mapReqifAttributeDefinition2Py(tagWithoutNamespace)
@@ -312,7 +318,7 @@ def load(f):
                 #TODO : Support other types
                 if valueXml.tag == ns + 'ATTRIBUTE-VALUE-EMBEDDED-DOCUMENT' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-STRING' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-XHTML'\
                         or valueXml.tag == ns + 'ATTRIBUTE-VALUE-BOOLEAN' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-INTEGER' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-DATE'\
-						or valueXml.tag == ns + 'ATTRIBUTE-VALUE-REAL':
+                        or valueXml.tag == ns + 'ATTRIBUTE-VALUE-REAL' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-SIMPLE':
                     attributeRefXml = valueXml.find('./' + ns + 'DEFINITION').getchildren()[0]
                     value['attributeRef'] = attributeRefXml.text
                     if 'THE-VALUE' in valueXml.attrib:
