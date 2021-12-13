@@ -328,7 +328,11 @@ def load(f):
                             './' + ns + 'XHTML-CONTENT/{http://automotive-his.de/200706/rif-xhtml}div')
                         if contentXml is None:
                             contentXml = valueXml.find("./" + ns + 'THE-VALUE/{http://www.w3.org/1999/xhtml}div')
-
+                        if contentXml is None:
+                            contentXml = valueXml.find(
+                                "./" + ns + 'THE-VALUE'
+                            )
+			
                         value["content"] = etree.tostring(remove_namespaces(contentXml))
 
                     #                    value["content"] = "".join(contentXml.itertext())
