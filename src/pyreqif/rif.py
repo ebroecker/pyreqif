@@ -305,6 +305,8 @@ def load(f):
                 requirement["typeRef"] = typeRefXml.text
 
             valuesXml = requirementXml.find('./' + ns + 'VALUES')
+            if valuesXml is None:
+                valuesXml = []
             values = {}
             for valueXml in valuesXml:
                 value = getSubElementValuesByTitle(valueXml)

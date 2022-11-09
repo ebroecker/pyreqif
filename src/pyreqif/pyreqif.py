@@ -694,7 +694,7 @@ class doc(reqIfObject):
             tempReq[col] = ""
         for col, value in self.flatReq(reqObj, html=True).items():
             tempReq[col] = value
-            tempReq["reqifId"] = req
+        tempReq["reqifId"] = req
         return tempReq
 
     def asHierarchDict(self):
