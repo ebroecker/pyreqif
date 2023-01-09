@@ -108,7 +108,7 @@ hierarch_stack = []
 last_hierarch_element = myHierarch
 for row_nr in range(2, ws.max_row+1):
     xls_req = dict(zip(columns, [ws.cell(row_nr, x).value for x in range(1, ws.max_column + 1)]))
-    if not "reqifId" in xls_req:
+    if "reqifId" not in xls_req:
         xls_req["reqifId"] = pyreqif.create.creatUUID()
     for col in columns:
         # do images:
