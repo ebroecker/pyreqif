@@ -667,7 +667,9 @@ class doc(reqIfObject):
                 reqDict[valueType._longname] = ""
                 for contentref in value._contentref:
                     if "longName" in dataType._valueTable[contentref]:
-                        reqDict[valueType._longname] += dataType._valueTable[contentref]["longName"] + ","
+                        reqDict[valueType._longname] += dataType._valueTable[contentref]["longName"] + ", "
+                # remove trailing comma
+                reqDict[valueType._longname] = reqDict[valueType._longname][:-2]        
             else:
                 reqDict[valueType._longname] = value._content
         return reqDict
