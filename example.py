@@ -54,7 +54,7 @@ for spec in specs:
     for child in myDoc.hierarchy:
         for item, depth in  myDoc.hierach_iterator(child, cols):
             #
-            # iterator gives every element and its hierachical depth
+            # iterator gives every element and its hierarchical depth
             # do some ascii printing of Text and Chapter
             print("  " * depth, end="")
             for key, value in req.items():
