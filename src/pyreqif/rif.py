@@ -256,6 +256,12 @@ def load(f):
                             './' + ns + 'DEFAULT-VALUE/' + ns + 'ATTRIBUTE-VALUE-ENUMERATION/' + ns + 'VALUES/' + ns + 'ENUM-VALUE-REF')
                         if defaultValue is not None:
                             specAttribType['defaultValue'] = defaultValue.text
+                        if "MULTI-VALUED" in attribute.attrib:
+                            specAttribType['multiValued'] = attribute.attrib["MULTI-VALUED"] == "true"
+                        else:
+                            multiValuedXml = attribute.find('./' + ns + 'MULTI-VALUED')
+                            if multiValuedXml is not None:
+                                specAttribType['multiValued'] = multiValuedXml.text == "true"
 
                     else:
                         print("Not supported Attribute: ", )
@@ -537,7 +543,7 @@ def dump(doc, f):
                 attribDict = py2reqif(ref.toDict())
                 if "TYPE" in attribDict and attribDict["TYPE"] == "enum":
                     attribDict.pop("TYPE")
-                    attribDict["MULTI-VALUED"] = "false"
+                    attribDict["MULTI-VALUED"] = "true" if attribDict.pop("multiValued", False) else "false"
                     enumXml = createSubElement(attributesXml, "ATTRIBUTE-DEFINITION-ENUMERATION", attributes=attribDict)
                     for value, label in attribDict.items():
                         if value == "typeRef":

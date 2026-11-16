@@ -38,10 +38,11 @@ def addSpecRelationGroup(mydoc, id, sourceDoc, targetDoc, longName, longNameOfTy
 
 
 def addReqType(specObjId, specObjLongName, specAttribId, collumName, typeRef, mydoc, type="complex",
-               lastChange=datetime.datetime.today().isoformat("T", "seconds")):
+               lastChange=datetime.datetime.today().isoformat("T", "seconds"), multiValued=False):
     mydoc.addRequirementType({"identifier": specObjId, "longName": specObjLongName, "lastChange": lastChange,
                               specAttribId: {"identifier": specAttribId, "typeRef": typeRef, "type": type,
-                                             "lastChange": lastChange, "longName": collumName}})
+                                             "lastChange": lastChange, "longName": collumName,
+                                             "multiValued": multiValued}})
 
 
 def addReq(id, specType, content, reqTypeRef, mydoc, longName=None,

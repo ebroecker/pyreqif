@@ -151,7 +151,7 @@ def dump(doc, f):
                 attribDict = py2reqif(ref.toDict())
                 if "TYPE" in attribDict and attribDict["TYPE"] == "enum":
                     attribDict.pop("TYPE")
-                    attribDict["MULTI-VALUED"] = "false"
+                    attribDict["MULTI-VALUED"] = "true" if attribDict.pop("multiValued", False) else "false"
                     enumXml = createSubElement(attributesXml, "ATTRIBUTE-DEFINITION-ENUMERATION", attributes=attribDict)
                     #                    for value,label in attribDict.iteritems():
                     for value, label in attribDict.items():

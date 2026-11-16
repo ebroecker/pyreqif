@@ -162,12 +162,20 @@ class reqTypeRefs(reqIfObject):
         else:
             self._typeref = None
 
+        if "multiValued" in kwargs:
+            self._multiValued = kwargs["multiValued"]
+            kwargs.pop("multiValued")
+        else:
+            self._multiValued = False
+
     def toDict(self):
         myDict = reqIfObject.toDict(self)
         if self._typeref is not None:
             myDict["typeRef"] = self._typeref
         if self._type is not None:
             myDict["type"] = self._type
+        if self._multiValued:
+            myDict["multiValued"] = self._multiValued
 
         return myDict
 
