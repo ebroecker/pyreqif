@@ -1,0 +1,6 @@
+/aa
+/.idea
+/build
+/media
+*.pyc
+/dist
