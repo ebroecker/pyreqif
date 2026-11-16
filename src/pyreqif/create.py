@@ -44,9 +44,13 @@ def addReqType(specObjId, specObjLongName, specAttribId, collumName, typeRef, my
                                              "lastChange": lastChange, "longName": collumName}})
 
 
-def addReq(id, specType, content, reqTypeRef, mydoc, lastChange=datetime.datetime.today().isoformat("T", "seconds")):
-    mydoc.addRequirement({"typeRef": specType, "identifier": id, "lastChange": lastChange,
-                          "values": {id: {"content": content, "attributeRef": reqTypeRef, "type": "embeddedDoc"}}})
+def addReq(id, specType, content, reqTypeRef, mydoc, longName=None,
+           lastChange=datetime.datetime.today().isoformat("T", "seconds")):
+    req = {"typeRef": specType, "identifier": id, "lastChange": lastChange,
+           "values": {id: {"content": content, "attributeRef": reqTypeRef, "type": "embeddedDoc"}}}
+    if longName is not None:
+        req["longName"] = longName
+    mydoc.addRequirement(req)
 
 
 def addRelation(sourceId, targetId, mydoc, id, type, longName=None,

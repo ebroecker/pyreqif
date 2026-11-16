@@ -67,6 +67,9 @@ ws = wb.active
 columns = [ws.cell(1, col_nr).value for col_nr in range(1, ws.max_column+1)]
 # ignore columns without a header cell (e.g. empty columns at the end of the sheet)
 valid_columns = [col for col in columns if col not in (None, "")]
+# optional: a column named "LONG-NAME" provides the SPEC-OBJECT long name instead of an attribute
+long_name_column = "LONG-NAME" if "LONG-NAME" in valid_columns else None
+attribute_columns = [col for col in valid_columns if col != long_name_column]
 
 document_reqif_id = "_{}ReqifId-Header".format(document_title)
 spec_reqif_id = "_{}ReqifId--spec".format(document_title)
@@ -84,7 +87,7 @@ pyreqif.create.addDatatype("_datatype_ID", mydoc)
 #
 # create columns
 #
-for col in valid_columns:
+for col in attribute_columns:
     pyreqif.create.addReqType("_some_requirement_type_id", "requirement Type", "_reqtype_for_" + col.replace(" ", "_"),
                               col, "_datatype_ID", mydoc)
 
@@ -102,7 +105,9 @@ for row_nr in range(2, ws.max_row+1):
     xls_req = dict(zip(columns, [ws.cell(row_nr, x).value for x in range(1, ws.max_column + 1)]))
     if "reqifId" not in xls_req:
         xls_req["reqifId"] = pyreqif.create.creatUUID()
-    for col in valid_columns:
+    # the optional column "LONG-NAME" provides the SPEC-OBJECT long name
+    long_name = xls_req[long_name_column] if long_name_column else None
+    for col in attribute_columns:
         # do images:
         pictures = get_images(images, row_nr - 1, columns.index(col))
         if type(xls_req[col]) == str:
@@ -115,7 +120,7 @@ for row_nr in range(2, ws.max_row+1):
         if xls_req[col] is not None:
             pyreqif.create.addReq(xls_req["reqifId"], "_some_requirement_type_id",
                                   "<div>" + str(xls_req[col]) + "</div>", "_reqtype_for_" + col.replace(" ", "_"),
-                                  mydoc)
+                                  mydoc, longName=long_name)
 
     # do hierarchy
     hierarch_element = pyreqif.create.createHierarchElement(xls_req["reqifId"])
