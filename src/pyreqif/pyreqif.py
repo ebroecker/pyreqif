@@ -79,6 +79,10 @@ class datatype(reqIfObject):
         self.datatypeArgs = [
             ('type', '_type', str, None),
             ('embedded', '_embedded', str, None),
+            ('MAX-LENGTH', '_maxLength', str, None),
+            ('MAX', '_max', str, None),
+            ('MIN', '_min', str, None),
+            ('ACCURACY', '_accuracy', str, None),
         ]
 
         for arg_name, destination, function, default in self.datatypeArgs:

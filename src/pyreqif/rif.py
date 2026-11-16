@@ -199,7 +199,7 @@ def load(f):
         if child.tag == ns + "DATATYPE-DEFINITION-DOCUMENT" or child.tag == ns + 'DATATYPE-DEFINITION-STRING' or child.tag == ns + 'DATATYPE-DEFINITION-XHTML'\
                     or child.tag == ns + 'DATATYPE-DEFINITION-BOOLEAN' or child.tag == ns + "DATATYPE-DEFINITION-INTEGER" or child.tag == ns + "DATATYPE-DEFINITION-DATE"\
 					or child.tag == ns + 'DATATYPE-DEFINITION-REAL' or child.tag == ns + 'DATATYPE-DEFINITION-SIMPLE':
-            datatypeProto = getSubElementValuesByTitle(child, ['EMBEDDED'])
+            datatypeProto = getSubElementValuesByTitle(child, ['EMBEDDED', 'MAX-LENGTH', 'MAX', 'MIN', 'ACCURACY'])
             tagWithoutNamespace = re.sub(r'{[\S]+}', '', child.tag)
             datatypeProto['type'] = mapReqifDatatypeDefinition2Py(tagWithoutNamespace)
             doc.addDatatype(reqif2py(datatypeProto))
@@ -274,6 +274,9 @@ def load(f):
 
             #                    specType[specAttribType['identifier']].pop('identifier')
             doc.addRequirementType(reqif2py(specType))
+
+        elif child.tag == ns + "SPECIFICATION-TYPE":
+            doc.specificationTypes.add(reqif2py(getSubElementValuesByTitle(child, ['DESC'])))
 
     def remove_namespaces(thedoc):
         # http://wiki.tei-c.org/index.php/Remove-Namespaces.xsl
@@ -401,6 +404,8 @@ def load(f):
     def getHierarchy(hierarchyEle, inputType):
         hierarchyDict = getSubElementValuesByTitle(hierarchyEle)
         typeRef = hierarchyEle.find('./' + ns + 'TYPE/' + ns + 'SPEC-TYPE-REF')
+        if typeRef is None:
+            typeRef = hierarchyEle.find('./' + ns + 'TYPE/' + ns + 'SPECIFICATION-TYPE-REF')
         if typeRef is not None:
             hierarchyDict["typeRef"] = typeRef.text
 

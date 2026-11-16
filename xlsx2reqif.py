@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 import zipfile
 import datetime
 import xml.etree.ElementTree
@@ -60,6 +61,8 @@ def get_images(images, row, col):
 file_name = sys.argv[1]
 
 document_title, _ = os.path.splitext(os.path.basename(file_name))
+# identifiers must be valid xs:ID (NCName); keep only the safe characters
+column_slug = lambda col: re.sub(r"[^A-Za-z0-9_.\-]", "_", col)
 
 images = get_images_from_excel(file_name)
 wb = openpyxl.load_workbook(file_name)
@@ -109,7 +112,7 @@ for col in attribute_columns:
     # start with all values from the validation list, so options that are not
     # used in any cell are preserved in the datatype
     for index, name in enumerate(enum_columns[col_nr]):
-        value_ids[name] = "_enumval_{}_{}".format(col.replace(" ", "_"), index)
+        value_ids[name] = "_enumval_{}_{}".format(column_slug(col), index)
     for row_nr in range(2, ws.max_row + 1):
         cell = ws.cell(row_nr, col_nr).value
         if cell is None or not isinstance(cell, str):
@@ -126,7 +129,7 @@ for col in attribute_columns:
             if name not in value_ids:
                 if name in enum_columns[col_nr]:
                     index = enum_columns[col_nr].index(name)
-                    value_ids[name] = "_enumval_{}_{}".format(col.replace(" ", "_"), index)
+                    value_ids[name] = "_enumval_{}_{}".format(column_slug(col), index)
                 else:
                     print("Warning: value {!r} in column {!r} is not in the "
                           "validation list, adding it to the enumeration".format(name, col))
@@ -152,18 +155,18 @@ pyreqif.create.addDatatype("_datatype_ID", mydoc)
 #
 for col in attribute_columns:
     if col in enum_info:
-        datatype_id = "_datatype_enum_for_" + col.replace(" ", "_")
+        datatype_id = "_datatype_enum_for_" + column_slug(col)
         values = {}
         for name, value_id in enum_info[col]["valueIds"].items():
             values[value_id] = {"identifier": value_id, "lastChange": last_change, "longName": name}
         pyreqif.create.addDatatype(datatype_id, mydoc, type="enum", longName=col + "_type", values=values)
         pyreqif.create.addReqType("_some_requirement_type_id", "requirement Type",
-                                  "_reqtype_for_" + col.replace(" ", "_"),
+                                  "_reqtype_for_" + column_slug(col),
                                   col, datatype_id, mydoc, type="enum",
                                   multiValued=enum_info[col]["multiValued"])
     else:
         pyreqif.create.addReqType("_some_requirement_type_id", "requirement Type",
-                                  "_reqtype_for_" + col.replace(" ", "_"),
+                                  "_reqtype_for_" + column_slug(col),
                                   col, "_datatype_ID", mydoc)
 
 #
@@ -199,7 +202,7 @@ for row_nr in range(2, ws.max_row+1):
                 value_ids = enum_info[col]["valueIds"]
                 if all(part in value_ids for part in parts if part) and any(parts):
                     pyreqif.create.addReq(xls_req["reqifId"], "_some_requirement_type_id",
-                                          None, "_reqtype_for_" + col.replace(" ", "_"),
+                                          None, "_reqtype_for_" + column_slug(col),
                                           mydoc, longName=long_name,
                                           contentRef=[value_ids[part] for part in parts if part])
                 else:
@@ -207,7 +210,7 @@ for row_nr in range(2, ws.max_row+1):
                           "enumeration values, skipping it".format(xls_req[col], col))
             else:
                 pyreqif.create.addReq(xls_req["reqifId"], "_some_requirement_type_id",
-                                      "<div>" + str(xls_req[col]) + "</div>", "_reqtype_for_" + col.replace(" ", "_"),
+                                      "<div>" + str(xls_req[col]) + "</div>", "_reqtype_for_" + column_slug(col),
                                       mydoc, longName=long_name)
 
     # do hierarchy

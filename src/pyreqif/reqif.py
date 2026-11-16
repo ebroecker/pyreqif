@@ -2,6 +2,7 @@ import sys
 
 sys.path.append('..')
 import io
+import datetime
 import pyreqif.rif
 from lxml import etree
 import lxml.html
@@ -107,11 +108,15 @@ def dump(doc, f):
     for datatype in doc.datatypeList:
         if datatype.mytype == "document":
             myDict = py2reqif(datatype.toDict())
+            # range attributes are not allowed on DATATYPE-DEFINITION-XHTML
+            for rangeAttr in ("MAX", "MIN", "ACCURACY", "MAX-LENGTH"):
+                myDict.pop(rangeAttr, None)
             datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-XHTML", attributes=myDict)
             del myDict["TYPE"]
             createSubElements(datatypeXml, myDict)
         if datatype.mytype == "string":
             myDict = py2reqif(datatype.toDict())
+            myDict["MAX-LENGTH"] = datatype._maxLength if datatype._maxLength is not None else "32000"
             datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-STRING", attributes=myDict)
             del myDict["TYPE"]
             createSubElements(datatypeXml, myDict)
@@ -123,16 +128,23 @@ def dump(doc, f):
             createSubElements(datatypeXml, myDict)
             specifiedValuesXml = createSubElement(datatypeXml, "SPECIFIED-VALUES")
             #            for value,label in datatype.valueTable.iteritems():
-            for value, label in datatype.valueTable.items():
+            for valueIndex, (value, label) in enumerate(datatype.valueTable.items()):
                 valuesXml = createSubElement(specifiedValuesXml, "ENUM-VALUE", attributes=py2reqif(label))
                 # createSubElement(valuesXml, "IDENTIFIER", value)
                 #                for element,content in py2reqif(label).iteritems():
+                hasProperties = False
                 for element, content in py2reqif(label).items():
                     if element == "properites":
+                        hasProperties = True
                         props = createSubElement(valuesXml, "PROPERTIES")
                         createSubElement(props, "EMBEDDED-VALUE", attributes=py2reqif(content))
                     elif element not in attributesForElements:
                         createSubElement(valuesXml, element, content)
+                if not hasProperties:
+                    # PROPERTIES/EMBEDDED-VALUE is mandatory for every ENUM-VALUE
+                    props = createSubElement(valuesXml, "PROPERTIES")
+                    createSubElement(props, "EMBEDDED-VALUE",
+                                     attributes={"KEY": str(valueIndex + 1), "OTHER-CONTENT": "1"})
 
     #
     # SPEC-TYPES
@@ -190,8 +202,12 @@ def dump(doc, f):
         createSubElement(specTypes, "SPEC-RELATION-TYPE", attributes=py2reqif(relationType.toDict()))
 
     for specificationType in doc.specificationTypes:
-        print(py2reqif(specificationType))
         createSubElement(specTypes, "SPECIFICATION-TYPE", attributes=py2reqif(specificationType))
+    if len(doc.specificationTypes._list) == 0:
+        # at least one SPECIFICATION-TYPE must exist for the TYPE references
+        createSubElement(specTypes, "SPECIFICATION-TYPE",
+                         attributes={"IDENTIFIER": "_doc_type_ref", "LONG-NAME": "doc_type",
+                                     "LAST-CHANGE": datetime.datetime.today().isoformat("T", "seconds")})
     # TODO
     # <SPECIFICATION-TYPE IDENTIFIER="_jgCytgfNEeeAO8RifBaE-g" LAST-CHANGE="2017-03-13T10:15:09.017+01:00" LONG-NAME="Specification Type">
     #      <SPEC-ATTRIBUTES>
@@ -308,7 +324,9 @@ def dump(doc, f):
                                     contentXml = createSubElement(valueXml, "THE-VALUE")
                                     contentXml.append(labroot)
                                 else:
-                                    createSubElement(valueXml, "THE-VALUE", lab)
+                                    theValueXml = createSubElement(valueXml, "THE-VALUE")
+                                    divXml = etree.SubElement(theValueXml, "{http://www.w3.org/1999/xhtml}div")
+                                    divXml.text = str(lab)
                         elif val not in attributesForElements and val not in notUsedAttributes:
                             createSubElement(valueXml, val, lab)
             elif value == "typeRef":
@@ -380,7 +398,7 @@ def dump(doc, f):
         for value, label in py2reqif(hierarch.toDict()).items():
             if value == "typeRef":
                 typeXml = createSubElement(specHierarchRootXml, "TYPE")
-                createSubElement(typeXml, "SPECIFICATION-TYPE-REF", label)
+                createSubElement(typeXml, "SPECIFICATION-TYPE-REF", label if label is not None else "_doc_type_ref")
             elif value not in attributesForElements:
                 createSubElement(specHierarchRootXml, value, label)
 
