@@ -1,6 +1,6 @@
 # pyreqif
 
-[![Build Status](https://travis-ci.org/ebroecker/pyreqif.svg?branch=py3)](https://travis-ci.org/ebroecker/pyreqif)
+[![CI](https://github.com/ebroecker/pyreqif/actions/workflows/ci.yml/badge.svg?branch=py3)](https://github.com/ebroecker/pyreqif/actions/workflows/ci.yml)
 
 ## simple python representation of RIF/REQIF (Exerpt/HIS/...) Objects in Python ##
 
@@ -17,8 +17,11 @@ currently some basic support to convert:
 
 
 ## Howto Install ##
-* git clone https://github.com/ebroecker/pyreqif.git
-* python setup.py install
+* from PyPI (after next release): `pip install pyreqif`
+* from source:
+  * git clone https://github.com/ebroecker/pyreqif.git
+  * `pip install .` (or `pip install -e .` for development)
+
 
 
 

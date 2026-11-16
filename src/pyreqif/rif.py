@@ -200,7 +200,7 @@ def load(f):
                     or child.tag == ns + 'DATATYPE-DEFINITION-BOOLEAN' or child.tag == ns + "DATATYPE-DEFINITION-INTEGER" or child.tag == ns + "DATATYPE-DEFINITION-DATE"\
 					or child.tag == ns + 'DATATYPE-DEFINITION-REAL' or child.tag == ns + 'DATATYPE-DEFINITION-SIMPLE':
             datatypeProto = getSubElementValuesByTitle(child, ['EMBEDDED'])
-            tagWithoutNamespace = re.sub('{[\S]*}', '', child.tag)
+            tagWithoutNamespace = re.sub(r'{[\S]+}', '', child.tag)
             datatypeProto['type'] = mapReqifDatatypeDefinition2Py(tagWithoutNamespace)
             doc.addDatatype(reqif2py(datatypeProto))
 
@@ -235,7 +235,7 @@ def load(f):
                             or attribute.tag == ns + "ATTRIBUTE-VALUE-DATE" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-DATE"\
                             or attribute.tag == ns + "ATTRIBUTE-DEFINITION-REAL" or attribute.tag == ns + "ATTRIBUTE-DEFINITION-SIMPLE":
                         specAttribType = getSubElementValuesByTitle(attribute)
-                        tagWithoutNamespace = re.sub('{[\S]*}', '', attribute.tag)
+                        tagWithoutNamespace = re.sub(r'{[\S]+}', '', attribute.tag)
                         specAttribType["type"] = mapReqifAttributeDefinition2Py(tagWithoutNamespace)
                         typeTag = attribute.find('./' + ns + 'TYPE')
                         if typeTag is not None:
@@ -339,7 +339,7 @@ def load(f):
 
                     #                    value["content"] = "".join(contentXml.itertext())
 
-                    tagWithoutNamespace = re.sub('{[\S]*}', '', valueXml.tag)
+                    tagWithoutNamespace = re.sub(r'{[\S]+}', '', valueXml.tag)
                     value["type"] = mapReqifAttributeValue2Py(tagWithoutNamespace)
 
                 elif valueXml.tag == ns + 'ATTRIBUTE-VALUE-ENUMERATION':

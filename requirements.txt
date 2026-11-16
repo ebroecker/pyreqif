@@ -1,6 +1,0 @@
-lxml
-future
-oletools
-openpyxl
-xlsxwriter
-image

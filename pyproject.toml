@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyreqif"
+description = "very basic python implementation of reqif object model with import and export feature"
+readme = "README.md"
+license = { text = "BSD" }
+authors = [{ name = "Eduard Broecker", email = "eduard@gmx.de" }]
+keywords = ["reqif", "requirements", "interchange", "format"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "License :: OSI Approved :: BSD License",
+    "Topic :: Scientific/Engineering",
+    "Programming Language :: Python :: 3",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "lxml",
+    "oletools",
+    "openpyxl",
+    "pillow",
+    "xlsxwriter",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/ebroecker/pyreqif"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+script-files = ["reqif2html.py", "reqif2xlsx.py", "xlsx2reqif.py"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+tag_regex = "^(?P<prefix>)?(?P<version>[0-9].*)$"

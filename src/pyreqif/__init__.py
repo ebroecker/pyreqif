@@ -1,4 +1,9 @@
+try:
+    from importlib.metadata import version, PackageNotFoundError
+except ImportError:  # Python < 3.8
+    from importlib_metadata import version, PackageNotFoundError
 
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
+try:
+    __version__ = version("pyreqif")
+except PackageNotFoundError:
+    __version__ = "unknown"
