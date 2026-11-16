@@ -137,6 +137,39 @@ for col in attribute_columns:
     if len(value_ids) > 0:
         enum_info[col] = {"valueIds": value_ids, "multiValued": multi_valued}
 
+#
+# detect numeric columns: columns whose cells are all int or all float
+# become real INTEGER/REAL datatypes instead of xhtml text.
+# The ReqIF.Text column is always kept as xhtml, like the ReqIF standard wants it.
+#
+numeric_columns = {}  # column name -> "integer" or "real"
+for col in attribute_columns:
+    if col == "ReqIF.Text" or col in enum_info:
+        continue
+    col_nr = columns.index(col) + 1
+    are_integer = True
+    are_real = True
+    has_value = False
+    for row_nr in range(2, ws.max_row + 1):
+        cell = ws.cell(row_nr, col_nr).value
+        if cell is None or (isinstance(cell, str) and cell.strip() == ""):
+            continue
+        has_value = True
+        if isinstance(cell, bool):
+            are_integer = False
+            are_real = False
+        elif isinstance(cell, int):
+            are_real = False
+        elif isinstance(cell, float):
+            are_integer = False
+        else:
+            are_integer = False
+            are_real = False
+    if has_value and are_integer:
+        numeric_columns[col] = "integer"
+    elif has_value and are_real:
+        numeric_columns[col] = "real"
+
 document_reqif_id = "_{}ReqifId-Header".format(document_title)
 spec_reqif_id = "_{}ReqifId--spec".format(document_title)
 doc_type_ref = "_doc_type_ref"
@@ -164,6 +197,12 @@ for col in attribute_columns:
                                   "_reqtype_for_" + column_slug(col),
                                   col, datatype_id, mydoc, type="enum",
                                   multiValued=enum_info[col]["multiValued"])
+    elif col in numeric_columns:
+        datatype_id = "_datatype_{}_for_{}".format(numeric_columns[col], column_slug(col))
+        pyreqif.create.addDatatype(datatype_id, mydoc, type=numeric_columns[col], longName=col + "_type")
+        pyreqif.create.addReqType("_some_requirement_type_id", "requirement Type",
+                                  "_reqtype_for_" + column_slug(col),
+                                  col, datatype_id, mydoc, type=numeric_columns[col])
     else:
         pyreqif.create.addReqType("_some_requirement_type_id", "requirement Type",
                                   "_reqtype_for_" + column_slug(col),
@@ -208,6 +247,10 @@ for row_nr in range(2, ws.max_row+1):
                 else:
                     print("Warning: value {!r} in column {!r} does not match the "
                           "enumeration values, skipping it".format(xls_req[col], col))
+            elif col in numeric_columns:
+                pyreqif.create.addReq(xls_req["reqifId"], "_some_requirement_type_id",
+                                      str(xls_req[col]), "_reqtype_for_" + column_slug(col),
+                                      mydoc, longName=long_name, valueType=numeric_columns[col])
             else:
                 pyreqif.create.addReq(xls_req["reqifId"], "_some_requirement_type_id",
                                       "<div>" + str(xls_req[col]) + "</div>", "_reqtype_for_" + column_slug(col),

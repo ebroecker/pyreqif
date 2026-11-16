@@ -45,32 +45,32 @@ transLationTable = {"IDENTIFIER": "identifier",
 mapReqifAttributeValue = {"default": "embeddedDoc",
                           "ATTRIBUTE-VALUE-EMBEDDED-DOCUMENT": "embeddedDoc",
                           "ATTRIBUTE-VALUE-STRING": "string",
-                          "ATTRIBUTE-VALUE-DATE": "string",
+                          "ATTRIBUTE-VALUE-DATE": "date",
                           "ATTRIBUTE-VALUE-SIMPLE": "embeddedDoc",
                           "ATTRIBUTE-VALUE-XHTML": "embeddedDoc",
-                          "ATTRIBUTE-VALUE-BOOLEAN": "embeddedDoc",
-                          "ATTRIBUTE-VALUE-REAL": "embeddedDoc",
-                          "ATTRIBUTE-VALUE-INTEGER": "embeddedDoc"}
+                          "ATTRIBUTE-VALUE-BOOLEAN": "bool",
+                          "ATTRIBUTE-VALUE-REAL": "real",
+                          "ATTRIBUTE-VALUE-INTEGER": "integer"}
 
 mapReqifAttributeDefinition = {"default": "complex",
                                "ATTRIBUTE-DEFINITION-COMPLEX": "complex",
                                "ATTRIBUTE-DEFINITION-STRING": "string",
-                               "ATTRIBUTE-DEFINITION-DATE": "string",
+                               "ATTRIBUTE-DEFINITION-DATE": "date",
                                "ATTRIBUTE-DEFINITION-SIMPLE": "complex",
                                "ATTRIBUTE-DEFINITION-XHTML": "complex",
-                               "ATTRIBUTE-DEFINITION-BOOLEAN": "complex",
-                               "ATTRIBUTE-DEFINITION-REAL": "complex",
-                               "ATTRIBUTE-DEFINITION-INTEGER": "complex"}
+                               "ATTRIBUTE-DEFINITION-BOOLEAN": "bool",
+                               "ATTRIBUTE-DEFINITION-REAL": "real",
+                               "ATTRIBUTE-DEFINITION-INTEGER": "integer"}
 
 mapReqifDatatypeDefinition = {"default": "document",
                               "DATATYPE-DEFINITION-DOCUMENT": "document",
                               "DATATYPE-DEFINITION-STRING": "string",
-                              "DATATYPE-DEFINITION-DATE": "string",
+                              "DATATYPE-DEFINITION-DATE": "date",
                               "DATATYPE-DEFINITION-SIMPLE": "document",
                               "DATATYPE-DEFINITION-XHTML": "document",
-                              "DATATYPE-DEFINITION-BOOLEAN": "document",
-                              "DATATYPE-DEFINITION-REAL": "document",
-                              "DATATYPE-DEFINITION-INTEGER": "document"}
+                              "DATATYPE-DEFINITION-BOOLEAN": "bool",
+                              "DATATYPE-DEFINITION-REAL": "real",
+                              "DATATYPE-DEFINITION-INTEGER": "integer"}
 
 transLationTableReverse = dict(map(reversed, transLationTable.items()))
 

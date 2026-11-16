@@ -120,6 +120,42 @@ def dump(doc, f):
             datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-STRING", attributes=myDict)
             del myDict["TYPE"]
             createSubElements(datatypeXml, myDict)
+        if datatype.mytype == "bool":
+            myDict = py2reqif(datatype.toDict())
+            myDict.pop("MAX", None)
+            myDict.pop("MIN", None)
+            myDict.pop("ACCURACY", None)
+            myDict.pop("MAX-LENGTH", None)
+            datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-BOOLEAN", attributes=myDict)
+            del myDict["TYPE"]
+            createSubElements(datatypeXml, myDict)
+        if datatype.mytype == "integer":
+            myDict = py2reqif(datatype.toDict())
+            myDict["MIN"] = datatype._min if datatype._min is not None else "0"
+            myDict["MAX"] = datatype._max if datatype._max is not None else "2147483647"
+            myDict.pop("ACCURACY", None)
+            myDict.pop("MAX-LENGTH", None)
+            datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-INTEGER", attributes=myDict)
+            del myDict["TYPE"]
+            createSubElements(datatypeXml, myDict)
+        if datatype.mytype == "real":
+            myDict = py2reqif(datatype.toDict())
+            myDict["MIN"] = datatype._min if datatype._min is not None else "0.0"
+            myDict["MAX"] = datatype._max if datatype._max is not None else "4.0E308"
+            myDict["ACCURACY"] = datatype._accuracy if datatype._accuracy is not None else "4"
+            myDict.pop("MAX-LENGTH", None)
+            datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-REAL", attributes=myDict)
+            del myDict["TYPE"]
+            createSubElements(datatypeXml, myDict)
+        if datatype.mytype == "date":
+            myDict = py2reqif(datatype.toDict())
+            myDict.pop("MAX", None)
+            myDict.pop("MIN", None)
+            myDict.pop("ACCURACY", None)
+            myDict.pop("MAX-LENGTH", None)
+            datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-DATE", attributes=myDict)
+            del myDict["TYPE"]
+            createSubElements(datatypeXml, myDict)
         if datatype.mytype == "enum":
             datatypeXml = createSubElement(datatypesXml, "DATATYPE-DEFINITION-ENUMERATION",
                                            attributes=py2reqif(datatype.toDict()))
@@ -197,6 +233,22 @@ def dump(doc, f):
                         elif value not in attributesForElements and value not in notUsedAttributes:
                             createSubElement(enumXml, value, label)
 
+                for typeName, tagSuffix, refSuffix in [
+                        ("bool", "BOOLEAN", "BOOLEAN"),
+                        ("integer", "INTEGER", "INTEGER"),
+                        ("real", "REAL", "REAL"),
+                        ("date", "DATE", "DATE")]:
+                    if "TYPE" in attribDict and attribDict["TYPE"] == typeName:
+                        enumXml = createSubElement(attributesXml,
+                                                   "ATTRIBUTE-DEFINITION-" + tagSuffix, attributes=attribDict)
+                        attribDict.pop("TYPE")
+                        for value, label in attribDict.items():
+                            if value == "typeRef":
+                                typeXml = createSubElement(enumXml, "TYPE")
+                                createSubElement(typeXml, "DATATYPE-DEFINITION-" + refSuffix + "-REF", label)
+                            elif value not in attributesForElements and value not in notUsedAttributes:
+                                createSubElement(enumXml, value, label)
+
     # SPEC-RELATION-TYPE
     for relationType in doc.specRelationTypeList:
         createSubElement(specTypes, "SPEC-RELATION-TYPE", attributes=py2reqif(relationType.toDict()))
@@ -256,6 +308,15 @@ def dump(doc, f):
                         valueXml = createSubElement(valuesXml, "ATTRIBUTE-VALUE-STRING", attributes=tempDict,
                                                     additionalAttributesForElements=['THE-VALUE'])
                         valuesDefinitionsXml = createSubElement(valueXml, "DEFINITION")
+                    elif value.mytype in ("bool", "integer", "real", "date"):
+                        suffix = {"bool": "BOOLEAN", "integer": "INTEGER",
+                                  "real": "REAL", "date": "DATE"}[value.mytype]
+                        tempDict["THE-VALUE"] = tempDict['CONTENT']
+                        tempDict.pop('CONTENT', None)
+                        value._content = None
+                        valueXml = createSubElement(valuesXml, "ATTRIBUTE-VALUE-" + suffix, attributes=tempDict,
+                                                    additionalAttributesForElements=['THE-VALUE'])
+                        valuesDefinitionsXml = createSubElement(valueXml, "DEFINITION")
                     elif value.mytype == "embeddedDoc":
                         valueXml = createSubElement(valuesXml, "ATTRIBUTE-VALUE-XHTML", attributes=tempDict)
                         valuesDefinitionsXml = createSubElement(valueXml, "DEFINITION")
@@ -274,6 +335,11 @@ def dump(doc, f):
                                 createSubElement(valuesDefinitionsXml, "ATTRIBUTE-DEFINITION-XHTML-REF", lab)
                             elif value.mytype == "string":
                                 createSubElement(valuesDefinitionsXml, "ATTRIBUTE-DEFINITION-STRING-REF", lab)
+                            elif value.mytype in ("bool", "integer", "real", "date"):
+                                suffix = {"bool": "BOOLEAN", "integer": "INTEGER",
+                                          "real": "REAL", "date": "DATE"}[value.mytype]
+                                createSubElement(valuesDefinitionsXml,
+                                                 "ATTRIBUTE-DEFINITION-" + suffix + "-REF", lab)
                             else:
                                 print("Unknown Type " + value.mytype)
 
