@@ -318,10 +318,20 @@ def load(f):
             for valueXml in valuesXml:
                 value = getSubElementValuesByTitle(valueXml)
                 #TODO : Support other types
+                value = getSubElementValuesByTitle(valueXml)
                 if valueXml.tag == ns + 'ATTRIBUTE-VALUE-EMBEDDED-DOCUMENT' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-STRING' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-XHTML'\
-                        or valueXml.tag == ns + 'ATTRIBUTE-VALUE-BOOLEAN' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-INTEGER' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-DATE'\
-                        or valueXml.tag == ns + 'ATTRIBUTE-VALUE-REAL' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-SIMPLE':
-                    attributeRefXml = valueXml.find('./' + ns + 'DEFINITION').getchildren()[0]
+                        or valueXml.tag == ns + 'ATTRIBUTE-VALUE-BOOLEAN' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-INTEGER' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-DATE' or valueXml.tag == ns + 'ATTRIBUTE-VALUE-REAL'\
+                        or valueXml.tag == ns + 'ATTRIBUTE-VALUE-SIMPLE':
+                    definitionXml = valueXml.find('./' + ns + 'DEFINITION')
+                    if definitionXml is None or len(definitionXml.getchildren()) == 0:
+                        print("Warning: no DEFINITION found for value, skipping value:")
+                        print(valueXml.tag[len(ns):])
+                        continue
+                    attributeRefXml = definitionXml.getchildren()[0]
+                    if attributeRefXml.text is None:
+                        print("Warning: no attribute definition reference found for value, skipping value:")
+                        print(valueXml.tag[len(ns):])
+                        continue
                     value['attributeRef'] = attributeRefXml.text
                     if 'THE-VALUE' in valueXml.attrib:
                         value["content"] = valueXml.attrib['THE-VALUE']
