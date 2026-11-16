@@ -212,8 +212,10 @@ def load(f):
             for valElement in specifiedValues:
                 tempDict = getSubElementValuesByTitle(valElement)
                 properties = valElement.find('./' + ns + "PROPERTIES")
-                embeddedValue = properties.find('./' + ns + "EMBEDDED-VALUE")
-                tempDict['properites'] = reqif2py(getSubElementValuesByTitle(embeddedValue, ['KEY', 'OTHER-CONTENT']))
+                if properties is not None:
+                    embeddedValue = properties.find('./' + ns + "EMBEDDED-VALUE")
+                    if embeddedValue is not None:
+                        tempDict['properites'] = reqif2py(getSubElementValuesByTitle(embeddedValue, ['KEY', 'OTHER-CONTENT']))
                 tempDict = reqif2py(tempDict)
                 values[tempDict['identifier']] = tempDict
             datatypeProto['values'] = values

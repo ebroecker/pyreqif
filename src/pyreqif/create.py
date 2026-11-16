@@ -45,10 +45,17 @@ def addReqType(specObjId, specObjLongName, specAttribId, collumName, typeRef, my
                                              "multiValued": multiValued}})
 
 
-def addReq(id, specType, content, reqTypeRef, mydoc, longName=None,
+def addReq(id, specType, content, reqTypeRef, mydoc, longName=None, contentRef=None,
            lastChange=datetime.datetime.today().isoformat("T", "seconds")):
+    value = {"attributeRef": reqTypeRef}
+    if contentRef is not None:
+        value["type"] = "enum"
+        value["contentRef"] = contentRef
+    else:
+        value["content"] = content
+        value["type"] = "embeddedDoc"
     req = {"typeRef": specType, "identifier": id, "lastChange": lastChange,
-           "values": {id: {"content": content, "attributeRef": reqTypeRef, "type": "embeddedDoc"}}}
+           "values": {id: value}}
     if longName is not None:
         req["longName"] = longName
     mydoc.addRequirement(req)

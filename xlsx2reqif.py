@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import zipfile
+import datetime
 import xml.etree.ElementTree
 import openpyxl
 import pyreqif.create
@@ -71,6 +72,68 @@ valid_columns = [col for col in columns if col not in (None, "")]
 long_name_column = "LONG-NAME" if "LONG-NAME" in valid_columns else None
 attribute_columns = [col for col in valid_columns if col != long_name_column]
 
+#
+# detect columns with an enumeration datatype from the data validations:
+# a validation with a literal value list (e.g. "A,B,C") over a data column
+# turns this column into a ReqIF enumeration with a drop-down in the export
+#
+enum_columns = {}  # excel column number (1-based) -> list of allowed values
+for dv in ws.data_validations.dataValidation:
+    if dv.formula1 is None:
+        continue
+    formula = dv.formula1.strip()
+    if not (formula.startswith('"') and formula.endswith('"') and len(formula) > 2):
+        continue  # skip validations referencing other ranges
+    for cell_range in dv.sqref.ranges:
+        if cell_range.min_row > 2:
+            continue
+        for col_nr in range(cell_range.min_col, cell_range.max_col + 1):
+            enum_columns.setdefault(col_nr, [])
+            for value in formula[1:-1].split(","):
+                value = value.strip()
+                if value and value not in enum_columns[col_nr]:
+                    enum_columns[col_nr].append(value)
+
+#
+# collect the enum definitions per column: all cell values must be mappable
+# to an enumeration value; unknown values are added to the enumeration
+#
+last_change = datetime.datetime.today().isoformat("T", "seconds")
+enum_info = {}  # column name -> {"valueIds": {name: id}, "multiValued": bool}
+for col in attribute_columns:
+    col_nr = columns.index(col) + 1
+    if col_nr not in enum_columns:
+        continue
+    value_ids = {}
+    multi_valued = False
+    # start with all values from the validation list, so options that are not
+    # used in any cell are preserved in the datatype
+    for index, name in enumerate(enum_columns[col_nr]):
+        value_ids[name] = "_enumval_{}_{}".format(col.replace(" ", "_"), index)
+    for row_nr in range(2, ws.max_row + 1):
+        cell = ws.cell(row_nr, col_nr).value
+        if cell is None or not isinstance(cell, str):
+            continue
+        parts = [part.strip() for part in cell.split(",")]
+        if len(parts) > 1 and all(part in enum_columns[col_nr] for part in parts):
+            multi_valued = True
+            names = parts
+        else:
+            names = [cell.strip()]
+        for name in names:
+            if not name:
+                continue
+            if name not in value_ids:
+                if name in enum_columns[col_nr]:
+                    index = enum_columns[col_nr].index(name)
+                    value_ids[name] = "_enumval_{}_{}".format(col.replace(" ", "_"), index)
+                else:
+                    print("Warning: value {!r} in column {!r} is not in the "
+                          "validation list, adding it to the enumeration".format(name, col))
+                    value_ids[name] = pyreqif.create.creatUUID()
+    if len(value_ids) > 0:
+        enum_info[col] = {"valueIds": value_ids, "multiValued": multi_valued}
+
 document_reqif_id = "_{}ReqifId-Header".format(document_title)
 spec_reqif_id = "_{}ReqifId--spec".format(document_title)
 doc_type_ref = "_doc_type_ref"
@@ -85,11 +148,23 @@ pyreqif.create.addDocType(doc_type_ref, mydoc)
 pyreqif.create.addDatatype("_datatype_ID", mydoc)
 
 #
-# create columns
+# create columns (with real enumeration datatypes where detected)
 #
 for col in attribute_columns:
-    pyreqif.create.addReqType("_some_requirement_type_id", "requirement Type", "_reqtype_for_" + col.replace(" ", "_"),
-                              col, "_datatype_ID", mydoc)
+    if col in enum_info:
+        datatype_id = "_datatype_enum_for_" + col.replace(" ", "_")
+        values = {}
+        for name, value_id in enum_info[col]["valueIds"].items():
+            values[value_id] = {"identifier": value_id, "lastChange": last_change, "longName": name}
+        pyreqif.create.addDatatype(datatype_id, mydoc, type="enum", longName=col + "_type", values=values)
+        pyreqif.create.addReqType("_some_requirement_type_id", "requirement Type",
+                                  "_reqtype_for_" + col.replace(" ", "_"),
+                                  col, datatype_id, mydoc, type="enum",
+                                  multiValued=enum_info[col]["multiValued"])
+    else:
+        pyreqif.create.addReqType("_some_requirement_type_id", "requirement Type",
+                                  "_reqtype_for_" + col.replace(" ", "_"),
+                                  col, "_datatype_ID", mydoc)
 
 #
 # create document hierarchy head
@@ -118,9 +193,22 @@ for row_nr in range(2, ws.max_row+1):
                 xls_req[col] = "" if xls_req[col] is None else xls_req[col]
                 xls_req[col] += "<img src={}>".format(pic["target"])
         if xls_req[col] is not None:
-            pyreqif.create.addReq(xls_req["reqifId"], "_some_requirement_type_id",
-                                  "<div>" + str(xls_req[col]) + "</div>", "_reqtype_for_" + col.replace(" ", "_"),
-                                  mydoc, longName=long_name)
+            if col in enum_info:
+                # map the cell content to enumeration value references
+                parts = [part.strip() for part in str(xls_req[col]).split(",")]
+                value_ids = enum_info[col]["valueIds"]
+                if all(part in value_ids for part in parts if part) and any(parts):
+                    pyreqif.create.addReq(xls_req["reqifId"], "_some_requirement_type_id",
+                                          None, "_reqtype_for_" + col.replace(" ", "_"),
+                                          mydoc, longName=long_name,
+                                          contentRef=[value_ids[part] for part in parts if part])
+                else:
+                    print("Warning: value {!r} in column {!r} does not match the "
+                          "enumeration values, skipping it".format(xls_req[col], col))
+            else:
+                pyreqif.create.addReq(xls_req["reqifId"], "_some_requirement_type_id",
+                                      "<div>" + str(xls_req[col]) + "</div>", "_reqtype_for_" + col.replace(" ", "_"),
+                                      mydoc, longName=long_name)
 
     # do hierarchy
     hierarch_element = pyreqif.create.createHierarchElement(xls_req["reqifId"])

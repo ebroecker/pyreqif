@@ -113,11 +113,14 @@ def dump(myDoc, outfile, basepath = None):
             if len(enumNames) == 0:
                 continue
             colNr = cols.index(myType._longname)
-            multiValued = getattr(myType, "_multiValued", False)
-            hint = "" if not multiValued else "; multiple values allowed, comma separated"
-            worksheet.data_validation(1, colNr, row, colNr,
-                                      {"validate": "list", "source": enumNames,
-                                       "input_title": "allowed values" + hint})
+            if getattr(myType, "_multiValued", False):
+                validation = {"validate": "list", "source": enumNames,
+                              "input_title": "allowed values",
+                              "input_message": "multiple values allowed, comma separated"}
+            else:
+                validation = {"validate": "list", "source": enumNames,
+                              "input_title": "allowed values"}
+            worksheet.data_validation(1, colNr, row, colNr, validation)
 
 #    workbook.save(filename=outfile)
     workbook.close()
