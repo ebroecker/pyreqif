@@ -57,7 +57,8 @@ def write_excel_line(worksheet, item, row, cols, depth, basepath, format):
                     worksheet.insert_image(row, cols.index(col), file, {'y_offset' : col_height-height})
                 except:
                     print("Error with image: {}".format(file))
-                    worksheet.write_url(row, cols.index(col)+1, os.path.join(basepath,file), string="Link to picture")          
+                    worksheet.write_string(row, cols.index(col), "Link to picture: " + os.path.join(basepath, file))
+                    col_height = max(300, row_height)          
                     col_height = max(300, row_height)
 
         row_height = max(row_height, col_height)
@@ -96,5 +97,27 @@ def dump(myDoc, outfile, basepath = None):
         for item, depth in myDoc.hierach_iterator(child, cols):
             row += 1
             write_excel_line(worksheet, item, row, cols, depth, basepath, cell_format)
+
+    #
+    # add dropdown lists for columns with an enumeration datatype
+    #
+    for reqType in myDoc.requirementTypeList:
+        for myType in reqType.myTypes.values():
+            if myType._longname is None or myType._longname not in cols:
+                continue
+            datatype = myDoc.datatypeById(myType._typeref)
+            if datatype is None or datatype.mytype != "enum" or len(datatype.valueTable) == 0:
+                continue
+            enumNames = sorted({value["longName"] for value in datatype.valueTable.values()
+                                if "longName" in value})
+            if len(enumNames) == 0:
+                continue
+            colNr = cols.index(myType._longname)
+            multiValued = getattr(myType, "_multiValued", False)
+            hint = "" if not multiValued else "; multiple values allowed, comma separated"
+            worksheet.data_validation(1, colNr, row, colNr,
+                                      {"validate": "list", "source": enumNames,
+                                       "input_title": "allowed values" + hint})
+
 #    workbook.save(filename=outfile)
     workbook.close()
