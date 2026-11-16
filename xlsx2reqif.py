@@ -65,6 +65,8 @@ wb = openpyxl.load_workbook(file_name)
 ws = wb.active
 
 columns = [ws.cell(1, col_nr).value for col_nr in range(1, ws.max_column+1)]
+# ignore columns without a header cell (e.g. empty columns at the end of the sheet)
+valid_columns = [col for col in columns if col not in (None, "")]
 
 document_reqif_id = "_{}ReqifId-Header".format(document_title)
 spec_reqif_id = "_{}ReqifId--spec".format(document_title)
@@ -82,7 +84,7 @@ pyreqif.create.addDatatype("_datatype_ID", mydoc)
 #
 # create columns
 #
-for col in columns:
+for col in valid_columns:
     pyreqif.create.addReqType("_some_requirement_type_id", "requirement Type", "_reqtype_for_" + col.replace(" ", "_"),
                               col, "_datatype_ID", mydoc)
 
@@ -100,7 +102,7 @@ for row_nr in range(2, ws.max_row+1):
     xls_req = dict(zip(columns, [ws.cell(row_nr, x).value for x in range(1, ws.max_column + 1)]))
     if "reqifId" not in xls_req:
         xls_req["reqifId"] = pyreqif.create.creatUUID()
-    for col in columns:
+    for col in valid_columns:
         # do images:
         pictures = get_images(images, row_nr - 1, columns.index(col))
         if type(xls_req[col]) == str:
